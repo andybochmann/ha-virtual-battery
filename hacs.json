@@ -6,5 +6,6 @@
   "persistent_directory": "custom_components",
   "iot_class": "calculated",
   "documentation": "https://github.com/andybochmann/ha-virtual-battery",
-  "issue_tracker": "https://github.com/andybochmann/ha-virtual-battery/issues"
+  "issue_tracker": "https://github.com/andybochmann/ha-virtual-battery/issues",
+  "icon": "icon.png"
 }
