@@ -1,0 +1,45 @@
+reset_battery_level:
+  name: Reset Battery Level
+  description: Reset battery level to 100%.
+  target:
+    entity:
+      domain: sensor
+      integration: virtual_battery
+
+set_battery_level:
+  name: Set Battery Level
+  description: Set battery level to a specific value.
+  target:
+    entity:
+      domain: sensor
+      integration: virtual_battery
+  fields:
+    battery_level:
+      name: Battery Level
+      description: Battery level to set (0-100).
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          mode: slider
+
+set_discharge_days:
+  name: Set Discharge Days
+  description: Set number of days for the battery to discharge.
+  target:
+    entity:
+      domain: sensor
+      integration: virtual_battery
+  fields:
+    discharge_days:
+      name: Discharge Days
+      description: Number of days to discharge the battery (1-365).
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 365
+          step: 1
+          mode: box

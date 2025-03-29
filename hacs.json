@@ -1,0 +1,10 @@
+{
+  "name": "Virtual Battery",
+  "render_readme": true,
+  "domain": "virtual_battery",
+  "homeassistant": "2023.8.0",
+  "persistent_directory": "custom_components",
+  "iot_class": "calculated",
+  "documentation": "https://github.com/andybochmann/ha-virtual-battery",
+  "issue_tracker": "https://github.com/andybochmann/ha-virtual-battery/issues"
+}

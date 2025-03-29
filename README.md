@@ -1,0 +1,100 @@
+# Virtual Battery for Home Assistant
+
+A custom Home Assistant integration that creates a virtual battery based on various sensors.
+
+## Features
+
+- Create virtual batteries with custom names
+- Configure discharge periods (1-365 days)
+- Reset battery level to 100%
+- Set custom battery levels
+- Modify discharge periods
+- Track battery level over time
+- UI-based configuration
+- HACS installation support
+
+## Installation
+
+### HACS Installation
+1. Add this repository as a custom repository in HACS
+2. Search for "Virtual Battery" in HACS and install it
+3. Restart Home Assistant
+
+### Configuration
+
+Configure the integration through the UI under **Settings** → **Devices & Services** → **Add Integration** → **Virtual Battery**
+
+## Usage
+
+After configuration, you'll have a virtual battery sensor that can be used in your dashboards and automations.
+
+## Services
+
+The integration provides the following services:
+
+### Reset Battery Level
+- **Service**: `virtual_battery.reset_battery_level`
+- **Parameters**:
+  - `entity_id`: The entity ID of the virtual battery to reset
+- **Description**: Resets the battery level to 100%
+
+### Set Battery Level
+- **Service**: `virtual_battery.set_battery_level`
+- **Parameters**:
+  - `entity_id`: The entity ID of the virtual battery to set
+  - `battery_level`: The new battery level (0-100)
+- **Description**: Sets the battery level to a specific value
+
+### Set Discharge Days
+- **Service**: `virtual_battery.set_discharge_days`
+- **Parameters**:
+  - `entity_id`: The entity ID of the virtual battery to modify
+  - `discharge_days`: The new number of discharge days (1-365)
+- **Description**: Changes the number of days to discharge the battery
+
+## Entity Attributes
+
+Each virtual battery entity provides the following attributes:
+
+- `discharge_days`: Number of days to discharge the battery
+- `last_reset`: Timestamp of the last battery level reset
+- `last_update`: Timestamp of the last battery level update
+
+## Examples
+
+### Basic Configuration Example
+
+```yaml
+# Example configuration.yaml entry (if not using UI configuration)
+sensor:
+  - platform: virtual_battery
+    name: "My Virtual Battery"
+    discharge_days: 7
+```
+
+### Service Call Examples
+
+```yaml
+# Reset battery level
+service: virtual_battery.reset_battery_level
+target:
+  entity_id: sensor.my_virtual_battery
+
+# Set battery level to 50%
+service: virtual_battery.set_battery_level
+target:
+  entity_id: sensor.my_virtual_battery
+data:
+  battery_level: 50
+
+# Set discharge days to 14
+service: virtual_battery.set_discharge_days
+target:
+  entity_id: sensor.my_virtual_battery
+data:
+  discharge_days: 14
+```
+
+## Credits
+
+Created and maintained by [Andy Bochmann](https://github.com/andybochmann)
