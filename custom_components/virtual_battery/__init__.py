@@ -8,7 +8,6 @@ from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.components.sensor import Platform
 
 from .const import (
     ATTR_BATTERY_LEVEL,
