@@ -3,7 +3,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
-# Remove unused HomeAssistant import
+from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 
@@ -37,6 +37,10 @@ class VirtualBatteryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Provide a form for the user to fill out
         data_schema = vol.Schema({
             vol.Required("name", default="Virtual Battery"): str,
+            vol.Required("discharge_days", default=7): vol.All(
+                vol.Coerce(int),
+                vol.Range(min=1, max=365)
+            ),
             # Add more configuration fields as needed
         })
         
