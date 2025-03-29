@@ -52,11 +52,12 @@ class VirtualBatterySensor(SensorEntity):
 
     def __init__(self, hass, entry_id, name, discharge_days):
         """Initialize the Virtual Battery sensor."""
+        super().__init__()
         self._hass = hass
         self._entry_id = entry_id
         self._attr_name = name
         self._discharge_days = discharge_days
-        self._attr_unique_id = f"{DOMAIN}_{name}"
+        self._attr_unique_id = f"{DOMAIN}_{entry_id}"
         
         self._battery_level = 100
         self._last_reset = dt_util.utcnow()
@@ -64,13 +65,19 @@ class VirtualBatterySensor(SensorEntity):
         
         # Calculate discharge rate
         self._calculate_discharge_rate()
+
+    async def async_added_to_hass(self):
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
         
-        # Load the last state if available
+        # Restore the state after the entity is fully initialized
         self._restore_state()
         
         # Register update interval
-        async_track_time_interval(
-            hass, self._async_update, SCAN_INTERVAL
+        self.async_on_remove(
+            async_track_time_interval(
+                self._hass, self._async_update, SCAN_INTERVAL
+            )
         )
 
     def _calculate_discharge_rate(self):
@@ -80,8 +87,7 @@ class VirtualBatterySensor(SensorEntity):
 
     def _restore_state(self):
         """Restore the state of the sensor from last_reset time."""
-        last_state = self._hass.states.get(self.entity_id)
-        if last_state is not None:
+        if last_state := self._hass.states.get(self.entity_id):
             try:
                 # Restore attributes
                 attrs = last_state.attributes
