@@ -155,7 +155,22 @@ class VirtualBatterySensor(SensorEntity):
     async def async_set_battery_level(self, battery_level):
         """Set battery level to specific value."""
         self._battery_level = min(100, max(0, battery_level))
-        self._last_update = dt_util.utcnow()
+        
+        # Calculate and set a new last_reset time based on the manually set battery level
+        # This ensures the discharge calculation will continue from this point correctly
+        current_time = dt_util.utcnow()
+        if self._battery_level < 100:
+            # Calculate how much time would have needed to pass to reach this level
+            # from a full charge, then set last_reset to that time in the past
+            discharge_percentage = 100 - self._battery_level
+            minutes_to_discharge = (discharge_percentage / 100) * (self._discharge_days * 24 * 60)
+            time_delta = timedelta(minutes=minutes_to_discharge)
+            self._last_reset = current_time - time_delta
+        else:
+            # If battery is at 100%, reset timestamp is now
+            self._last_reset = current_time
+            
+        self._last_update = current_time
         self.async_write_ha_state()
 
     async def async_set_discharge_days(self, discharge_days):
