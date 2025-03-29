@@ -65,6 +65,8 @@ class VirtualBatterySensor(SensorEntity):
         
         # Calculate discharge rate
         self._calculate_discharge_rate()
+        
+        # Don't restore state here - will be done in async_added_to_hass
 
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
@@ -99,8 +101,11 @@ class VirtualBatterySensor(SensorEntity):
                     # Recalculate current battery level based on time since last reset
                     self._calculate_discharge_rate()
                     self._calculate_current_battery_level()
-            except (ValueError, KeyError):
-                pass
+                else:
+                    # If there was a state but no last_reset attribute, update state attributes
+                    self.async_write_ha_state()
+            except (ValueError, KeyError) as ex:
+                _LOGGER.warning("Error restoring previous state: %s", ex)
 
     def _calculate_current_battery_level(self):
         """Calculate the current battery level based on time since last reset."""
@@ -131,6 +136,9 @@ class VirtualBatterySensor(SensorEntity):
         """Update the battery level based on time passed."""
         if self._battery_level <= 0:
             self._battery_level = 0
+            # Also update last_update timestamp for consistent tracking
+            self._last_update = dt_util.utcnow()
+            self.async_write_ha_state()
             return
 
         self._calculate_current_battery_level()
