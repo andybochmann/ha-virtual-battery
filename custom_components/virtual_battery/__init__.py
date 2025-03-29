@@ -41,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Register services
     async def reset_battery_level(call: ServiceCall) -> None:
         """Reset battery level to 100%."""
-        entity_id = call.target["entity_id"]
+        entity_id = call.data["entity_id"]
         if "entities" in hass.data[DOMAIN]:
             for entity in hass.data[DOMAIN]["entities"]:
                 if entity.entity_id == entity_id:
@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def set_battery_level(call: ServiceCall) -> None:
         """Set battery level to specified value."""
-        entity_id = call.target["entity_id"]
+        entity_id = call.data["entity_id"]
         battery_level = call.data.get(ATTR_BATTERY_LEVEL)
         
         if "entities" in hass.data[DOMAIN]:
@@ -61,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def set_discharge_days(call: ServiceCall) -> None:
         """Set discharge days to specified value."""
-        entity_id = call.target["entity_id"]
+        entity_id = call.data["entity_id"]
         discharge_days = call.data.get(ATTR_DISCHARGE_DAYS)
         
         if "entities" in hass.data[DOMAIN]:
@@ -72,7 +72,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Register services
     hass.services.async_register(
-        DOMAIN, SERVICE_RESET_BATTERY_LEVEL, reset_battery_level
+        DOMAIN, SERVICE_RESET_BATTERY_LEVEL, reset_battery_level,
+        schema=vol.Schema({
+            vol.Required("entity_id"): cv.entity_id,
+        })
     )
     
     hass.services.async_register(
