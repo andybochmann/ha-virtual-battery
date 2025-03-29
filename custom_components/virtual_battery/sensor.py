@@ -74,7 +74,7 @@ class VirtualBatterySensor(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self._battery_level
+        return round(self._battery_level, 2)
 
     @property
     def extra_state_attributes(self):
