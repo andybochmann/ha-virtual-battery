@@ -63,8 +63,8 @@ class VirtualBatterySensor(SensorEntity):
         self._last_update = dt_util.utcnow()
         
         # Calculate discharge rate
-        self._discharge_per_day = 100 / discharge_days
-        self._discharge_per_interval = self._discharge_per_day / (24 * 60 / SCAN_INTERVAL.total_seconds() / 60)
+        # For X days: 100% / (X days * 24 hours * 60 minutes) * SCAN_INTERVAL_minutes
+        self._discharge_per_interval = 100 / (discharge_days * 24 * 60) * (SCAN_INTERVAL.total_seconds() / 60)
         
         # Register update interval
         async_track_time_interval(
