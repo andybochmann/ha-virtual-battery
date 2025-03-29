@@ -1,5 +1,6 @@
 """Constants for the Virtual Battery integration."""
 from datetime import timedelta
+from homeassistant.const import CONF_NAME
 
 DOMAIN = "virtual_battery"
 
@@ -8,7 +9,6 @@ CONF_DISCHARGE_DAYS = "discharge_days"
 DEFAULT_DISCHARGE_DAYS = 30
 MIN_DISCHARGE_DAYS = 1
 MAX_DISCHARGE_DAYS = 365
-CONF_NAME = "name"
 DEFAULT_NAME = "Virtual Battery"
 
 # Attributes

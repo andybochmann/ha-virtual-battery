@@ -9,7 +9,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, PERCENTAGE
+from homeassistant.const import CONF_NAME, PERCENTAGE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
@@ -33,12 +33,15 @@ async def async_setup_entry(
     name = entry.data[CONF_NAME]
     discharge_days = entry.data[CONF_DISCHARGE_DAYS]
     
-    async_add_entities([VirtualBatterySensor(hass, entry.entry_id, name, discharge_days)])
+    sensor = VirtualBatterySensor(hass, entry.entry_id, name, discharge_days)
+    async_add_entities([sensor])
 
-    # Store platform in hass.data for service access
-    if "platforms" not in hass.data[DOMAIN]:
-        hass.data[DOMAIN]["platforms"] = []
-    hass.data[DOMAIN]["platforms"].append(hass.data[Platform.SENSOR])
+    # Store sensor instance in hass.data for service access
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+    if "entities" not in hass.data[DOMAIN]:
+        hass.data[DOMAIN]["entities"] = []
+    hass.data[DOMAIN]["entities"].append(sensor)
 
 class VirtualBatterySensor(SensorEntity):
     """Implementation of a Virtual Battery sensor."""
