@@ -15,6 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -45,7 +46,7 @@ async def async_setup_entry(
         hass.data[DOMAIN]["entities"] = []
     hass.data[DOMAIN]["entities"].append(sensor)
 
-class VirtualBatterySensor(SensorEntity):
+class VirtualBatterySensor(SensorEntity, RestoreEntity):
     """Implementation of a Virtual Battery sensor."""
 
     _attr_device_class = SensorDeviceClass.BATTERY
@@ -84,7 +85,7 @@ class VirtualBatterySensor(SensorEntity):
         await super().async_added_to_hass()
         
         # Restore the state after the entity is fully initialized
-        self._restore_state()
+        await self._async_restore_state_from_last_stored()
         
         # Register update interval
         self.async_on_remove(
@@ -93,30 +94,51 @@ class VirtualBatterySensor(SensorEntity):
             )
         )
 
+    async def _async_restore_state_from_last_stored(self):
+        """Restore state using RestoreEntity."""
+        last_state = await self.async_get_last_state()
+        
+        if last_state is None:
+            _LOGGER.debug("No previous state found for %s", self.entity_id)
+            return
+
+        try:
+            # Restore attributes
+            attrs = last_state.attributes
+            
+            if ATTR_LAST_RESET in attrs and ATTR_LAST_UPDATE in attrs and ATTR_DISCHARGE_DAYS in attrs:
+                self._last_reset = datetime.fromisoformat(attrs[ATTR_LAST_RESET])
+                self._last_update = datetime.fromisoformat(attrs[ATTR_LAST_UPDATE])
+                self._discharge_days = attrs[ATTR_DISCHARGE_DAYS]
+                
+                # Try to restore the state value
+                if last_state.state not in (None, '', 'unknown', 'unavailable'):
+                    try:
+                        self._battery_level = float(last_state.state)
+                    except (ValueError, TypeError):
+                        self._battery_level = 100
+                        _LOGGER.warning("Could not convert state %s to float", last_state.state)
+                
+                # Recalculate current battery level based on time since last update
+                self._calculate_discharge_rate()
+                self._calculate_current_battery_level()
+                
+                _LOGGER.debug(
+                    "Restored state for %s: level=%.2f, discharge_days=%d, last_reset=%s",
+                    self.entity_id, 
+                    self._battery_level, 
+                    self._discharge_days, 
+                    self._last_reset.isoformat()
+                )
+            else:
+                _LOGGER.debug("Incomplete state attributes for %s, using defaults", self.entity_id)
+        except (ValueError, KeyError) as ex:
+            _LOGGER.warning("Error restoring previous state for %s: %s", self.entity_id, ex)
+
     def _calculate_discharge_rate(self):
         """Calculate the discharge rate based on discharge days."""
         # For X days: 100% / (X days * 24 hours * 60 minutes) * SCAN_INTERVAL_minutes
         self._discharge_per_interval = 100 / (self._discharge_days * 24 * 60) * (SCAN_INTERVAL.total_seconds() / 60)
-
-    def _restore_state(self):
-        """Restore the state of the sensor from last_reset time."""
-        if last_state := self._hass.states.get(self.entity_id):
-            try:
-                # Restore attributes
-                attrs = last_state.attributes
-                if ATTR_LAST_RESET in attrs:
-                    self._last_reset = datetime.fromisoformat(attrs[ATTR_LAST_RESET])
-                    self._last_update = datetime.fromisoformat(attrs[ATTR_LAST_UPDATE])
-                    self._discharge_days = attrs[ATTR_DISCHARGE_DAYS]
-                    
-                    # Recalculate current battery level based on time since last reset
-                    self._calculate_discharge_rate()
-                    self._calculate_current_battery_level()
-                else:
-                    # If there was a state but no last_reset attribute, update state attributes
-                    self.async_write_ha_state()
-            except (ValueError, KeyError) as ex:
-                _LOGGER.warning("Error restoring previous state: %s", ex)
 
     def _calculate_current_battery_level(self):
         """Calculate the current battery level based on time since last reset."""

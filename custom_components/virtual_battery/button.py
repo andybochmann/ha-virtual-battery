@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN
 
@@ -22,7 +23,7 @@ async def async_setup_entry(
     button = VirtualBatteryResetButton(hass, entry.entry_id, name)
     async_add_entities([button])
 
-class VirtualBatteryResetButton(ButtonEntity):
+class VirtualBatteryResetButton(ButtonEntity, RestoreEntity):
     """Implementation of a Virtual Battery Reset button."""
 
     def __init__(self, hass, entry_id, name):
@@ -36,6 +37,14 @@ class VirtualBatteryResetButton(ButtonEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry_id)},
         )
+
+    async def async_added_to_hass(self):
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        
+        # Restore state is typically less important for a button,
+        # but it's good practice to implement for consistency
+        await self.async_get_last_state()
 
     async def async_press(self) -> None:
         """Handle the button press - reset the battery to 100%."""

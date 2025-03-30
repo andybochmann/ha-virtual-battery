@@ -188,6 +188,12 @@ automation:
 
 - Adjust the discharge days setting using the `virtual_battery.set_discharge_days` service
 
+## Technical Details
+
+### State Persistence
+
+The Virtual Battery integration uses Home Assistant's `RestoreEntity` system to ensure that battery states, including last reset time and discharge days, are properly restored after Home Assistant restarts. This ensures your virtual batteries continue to discharge at the correct rate even after system reboots or service disruptions.
+
 ## Support
 
 If you encounter any issues or have feature requests, please [create an issue on GitHub](https://github.com/andybochmann/ha-virtual-battery/issues).
