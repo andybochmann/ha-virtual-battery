@@ -34,6 +34,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Virtual Battery from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+    
+    # Ensure we have a consistent data structure
+    if "entities" not in hass.data[DOMAIN]:
+        hass.data[DOMAIN]["entities"] = []
+        
     hass.data[DOMAIN][entry.entry_id] = entry.data
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

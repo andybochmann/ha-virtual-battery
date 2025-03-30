@@ -114,14 +114,18 @@ class VirtualBatterySensor(SensorEntity, RestoreEntity):
                 # Try to restore the state value
                 if last_state.state not in (None, '', 'unknown', 'unavailable'):
                     try:
+                        # Store the restored battery level
                         self._battery_level = float(last_state.state)
                     except (ValueError, TypeError):
-                        self._battery_level = 100
-                        _LOGGER.warning("Could not convert state %s to float", last_state.state)
-                
-                # Recalculate current battery level based on time since last update
-                self._calculate_discharge_rate()
-                self._calculate_current_battery_level()
+                        # Fall back to calculating based on time since last reset
+                        self._calculate_discharge_rate()
+                        self._calculate_current_battery_level()
+                        _LOGGER.warning("Could not convert state %s to float, calculated level: %.2f", 
+                                       last_state.state, self._battery_level)
+                else:
+                    # If state isn't available, calculate based on time since last reset
+                    self._calculate_discharge_rate()
+                    self._calculate_current_battery_level()
                 
                 _LOGGER.debug(
                     "Restored state for %s: level=%.2f, discharge_days=%d, last_reset=%s",
@@ -132,8 +136,14 @@ class VirtualBatterySensor(SensorEntity, RestoreEntity):
                 )
             else:
                 _LOGGER.debug("Incomplete state attributes for %s, using defaults", self.entity_id)
+                # Ensure we recalculate in this case
+                self._calculate_discharge_rate()
+                self._calculate_current_battery_level()
         except (ValueError, KeyError) as ex:
             _LOGGER.warning("Error restoring previous state for %s: %s", self.entity_id, ex)
+            # Ensure we recalculate in this case
+            self._calculate_discharge_rate()
+            self._calculate_current_battery_level()
 
     def _calculate_discharge_rate(self):
         """Calculate the discharge rate based on discharge days."""
@@ -145,49 +155,95 @@ class VirtualBatterySensor(SensorEntity, RestoreEntity):
         if self._last_reset:
             current_time = dt_util.utcnow()
             time_since_reset = current_time - self._last_reset
+            
+            # Ensure time_since_reset is not negative (could happen with clock changes)
+            if time_since_reset.total_seconds() < 0:
+                _LOGGER.warning("Detected negative time since reset, adjusting to current time")
+                self._last_reset = current_time
+                time_since_reset = timedelta(seconds=0)
+                
             minutes_since_reset = time_since_reset.total_seconds() / 60
             
             # Calculate total discharge since last reset
             total_discharge = (minutes_since_reset / (self._discharge_days * 24 * 60)) * 100
+            
+            # Update the battery level
             self._battery_level = max(0, 100 - total_discharge)
+            
+            _LOGGER.debug(
+                "Calculated battery level for %s: %.2f%% (minutes since reset: %.2f)",
+                self.entity_id,lf.entity_id,
+                self._battery_level,                self._battery_level,
+                minutes_since_reset
+            )
 
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return round(self._battery_level, 2)
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            ATTR_DISCHARGE_DAYS: self._discharge_days,
-            ATTR_LAST_RESET: self._last_reset.isoformat(),
-            ATTR_LAST_UPDATE: self._last_update.isoformat(),
-        }
-
-    async def _async_update(self, now=None):
+    async def _async_update(self, now=None):    @property
         """Update the battery level based on time passed."""
+        previous_level = self._battery_level"""
+        y_level, 2)
         if self._battery_level <= 0:
             self._battery_level = 0
-            # Also update last_update timestamp for consistent tracking
-            self._last_update = dt_util.utcnow()
+            # Also update last_update timestamp for consistent tracking):
+            self._last_update = dt_util.utcnow()        """Return the state attributes."""
+            
+            if previous_level != self._battery_level:ays,
+                _LOGGER.debug("%s: Battery reached 0%%", self.entity_id)
+                    ATTR_LAST_UPDATE: self._last_update.isoformat(),
             self.async_write_ha_state()
             return
-
-        self._calculate_current_battery_level()
+one):
+        self._calculate_current_battery_level()ased on time passed."""
         self._last_update = dt_util.utcnow()
+        
+        # Log significant changes for debuggingnt tracking
+        if abs(previous_level - self._battery_level) > 1.0:
+            _LOGGER.debug(
+                "%s: Battery level changed from %.2f%% to %.2f%% (discharge days: %d, last reset: %s)",
+                self.entity_id,
+                previous_level,
+                self._battery_level,)
+                self._discharge_days,.async_write_ha_state()
+                self._last_reset.isoformat()
+            )elf):
+                    """Reset battery level to 100%."""
         self.async_write_ha_state()
 
     async def async_reset_battery(self):
         """Reset battery level to 100%."""
         self._battery_level = 100
-        self._last_reset = dt_util.utcnow()
-        self._last_update = dt_util.utcnow()
-        self.async_write_ha_state()
+        self._last_reset = dt_util.utcnow()el(self, battery_level):
+        self._last_update = dt_util.utcnow()        """Set battery level to specific value."""
 
-    async def async_set_battery_level(self, battery_level):
-        """Set battery level to specific value."""
-        self._battery_level = min(100, max(0, battery_level))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        self.async_write_ha_state()        self._last_update = dt_util.utcnow()        self._calculate_discharge_rate()        self._discharge_days = discharge_days        """Set discharge days to specific value."""    async def async_set_discharge_days(self, discharge_days):        self.async_write_ha_state()        self._last_update = current_time                        self._last_reset = current_time            # If battery is at 100%, reset timestamp is now        else:            self._last_reset = current_time - time_delta            time_delta = timedelta(minutes=minutes_to_discharge)            minutes_to_discharge = (discharge_percentage / 100) * (self._discharge_days * 24 * 60)            discharge_percentage = 100 - self._battery_level            # from a full charge, then set last_reset to that time in the past            # Calculate how much time would have needed to pass to reach this level        if self._battery_level < 100:        current_time = dt_util.utcnow()        # This ensures the discharge calculation will continue from this point correctly        # Calculate and set a new last_reset time based on the manually set battery level                self._battery_level = min(100, max(0, battery_level))        """Set battery level to specific value."""    async def async_set_battery_level(self, battery_level):        self.async_write_ha_state()        self._battery_level = min(100, max(0, battery_level))
         
         # Calculate and set a new last_reset time based on the manually set battery level
         # This ensures the discharge calculation will continue from this point correctly
