@@ -16,6 +16,7 @@ A custom Home Assistant integration that creates a virtual battery with configur
 - 📊 Track battery level over time
 - 🖥️ UI-based configuration
 - 📦 HACS installation support
+- 🔘 Device with reset button for each battery
 
 ## 📥 Installation
 
@@ -39,7 +40,9 @@ Configure the integration through the UI:
 
 ## 🧰 Usage
 
-After configuration, you'll have a virtual battery sensor that can be used in your dashboards and automations. The virtual battery will automatically discharge over the configured time period.
+After configuration, you'll have a virtual battery device with two entities:
+1. A sensor showing the battery level that will automatically discharge over the configured time period
+2. A button that can be pressed to reset the battery level to 100%
 
 ## 🛠️ Services
 

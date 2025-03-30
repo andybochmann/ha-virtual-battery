@@ -4,6 +4,8 @@
 
 The Virtual Battery integration allows you to create virtual battery entities in Home Assistant that discharge over time. This can be useful for simulating battery-powered devices, tracking maintenance intervals, or creating visual indicators for various time-based events.
 
+Each virtual battery is created as a device with a sensor entity (the battery level) and a button entity (to reset the battery to 100%).
+
 ## How It Works
 
 The virtual battery starts at 100% and gradually decreases to 0% over the configured number of days. The discharge rate is calculated based on the configured discharge period and is updated every minute.
@@ -103,6 +105,19 @@ Each virtual battery entity provides the following attributes:
 - `discharge_days`: Number of days to discharge the battery
 - `last_reset`: Timestamp of the last battery level reset
 - `last_update`: Timestamp of the last battery level update
+
+## Entities
+
+### Battery Level Sensor
+
+Each virtual battery creates a sensor entity with the following properties:
+- **Device Class**: Battery
+- **Unit of Measurement**: %
+- **State Class**: Measurement
+
+### Reset Button
+
+Each virtual battery device also includes a button entity that can be pressed to reset the battery level to 100%. This provides a convenient way to reset the battery without calling a service.
 
 ## Use Cases
 

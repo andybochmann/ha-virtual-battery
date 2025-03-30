@@ -13,6 +13,8 @@ from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -65,6 +67,15 @@ class VirtualBatterySensor(SensorEntity):
         
         # Calculate discharge rate
         self._calculate_discharge_rate()
+        
+        # Set up device info
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry_id)},
+            name=name,
+            manufacturer="Virtual Battery",
+            model="Virtual Battery Sensor",
+            entry_type=DeviceEntryType.SERVICE,
+        )
         
         # Don't restore state here - will be done in async_added_to_hass
 
