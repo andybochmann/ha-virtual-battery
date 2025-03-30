@@ -50,7 +50,8 @@ class VirtualBatteryResetButton(ButtonEntity, RestoreEntity):
         """Handle the button press - reset the battery to 100%."""
         if DOMAIN in self._hass.data and "entities" in self._hass.data[DOMAIN]:
             for entity in self._hass.data[DOMAIN]["entities"]:
-                if entity._entry_id == self._entry_id:
+                if hasattr(entity, '_entry_id') and entity._entry_id == self._entry_id:
                     await entity.async_reset_battery()
                     _LOGGER.debug("Reset button pressed for %s", self._attr_name)
-                    break
+                    return
+            _LOGGER.warning("Could not find matching sensor entity for button %s", self._attr_name)

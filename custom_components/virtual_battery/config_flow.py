@@ -77,6 +77,9 @@ class VirtualBatteryOptionsFlow(config_entries.OptionsFlow):
                 if not MIN_DISCHARGE_DAYS <= user_input[CONF_DISCHARGE_DAYS] <= MAX_DISCHARGE_DAYS:
                     errors[CONF_DISCHARGE_DAYS] = "discharge_days_invalid"
                 else:
+                    # Update data in config entry
+                    data = {**self.config_entry.data, CONF_DISCHARGE_DAYS: user_input[CONF_DISCHARGE_DAYS]}
+                    self.hass.config_entries.async_update_entry(self.config_entry, data=data)
                     return self.async_create_entry(title="", data=user_input)
             except Exception as ex:  # pylint: disable=broad-except
                 _LOGGER.error("Unexpected exception: %s", ex)
