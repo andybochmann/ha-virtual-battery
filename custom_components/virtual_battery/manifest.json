@@ -1,0 +1,12 @@
+{
+  "domain": "virtual_battery",
+  "name": "Virtual Battery",
+  "documentation": "https://github.com/andybochmann/ha-virtual-battery",
+  "dependencies": [],
+  "codeowners": ["@andybochmann"],
+  "requirements": [],
+  "config_flow": true,
+  "iot_class": "calculated",
+  "version": "1.0.0",
+  "issue_tracker": "https://github.com/andybochmann/ha-virtual-battery/issues"
+}

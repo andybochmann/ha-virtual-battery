@@ -1,0 +1,280 @@
+# 🔋 Virtual Battery for Home Assistant
+
+A custom Home Assistant integration that creates a virtual battery with configurable discharge periods.
+
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/andybochmann/ha-virtual-battery)
+![HACS Validation](https://img.shields.io/badge/HACS-Custom-orange.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+## ✨ Features
+
+- 🏷️ Create virtual batteries with custom names
+- ⏱️ Configure discharge periods (1 day or more)
+- 🔄 Reset battery level to 100%
+- 🎚️ Set custom battery levels
+- 🔧 Modify discharge periods
+- 📊 Track battery level over time
+- 🖥️ UI-based configuration
+- 📦 HACS installation support
+- 🔘 Device with reset button for each battery
+
+## 📥 Installation
+
+### HACS Installation
+1. Add this repository as a custom repository in HACS
+2. Search for "Virtual Battery" in HACS and install it
+3. Restart Home Assistant
+
+### Manual Installation
+1. Download the latest release
+2. Extract the folder `virtual_battery` from the archive to: `<your-home-assistant-path>/config/custom_components/`
+3. Restart Home Assistant
+
+## ⚙️ Configuration
+
+Configure the integration through the UI:
+1. Go to **Settings** → **Devices & Services**
+2. Click **+ Add Integration**
+3. Search for **Virtual Battery**
+4. Follow the configuration steps
+
+## 🧰 Usage
+
+After configuration, you'll have a virtual battery device with two entities:
+1. A sensor showing the battery level that will automatically discharge over the configured time period
+2. A button that can be pressed to reset the battery level to 100%
+
+## 🛠️ Services
+
+The integration provides the following services:
+
+### Reset Battery Level
+- **Service**: `virtual_battery.reset_battery_level`
+- **Parameters**:
+  - `entity_id`: The entity ID of the virtual battery to reset
+- **Description**: Resets the battery level to 100%
+
+### Set Battery Level
+- **Service**: `virtual_battery.set_battery_level`
+- **Parameters**:
+  - `entity_id`: The entity ID of the virtual battery to set
+  - `battery_level`: The new battery level (0-100)
+- **Description**: Sets the battery level to a specific value
+
+### Set Discharge Days
+- **Service**: `virtual_battery.set_discharge_days`
+- **Parameters**:
+  - `entity_id`: The entity ID of the virtual battery to modify
+  - `discharge_days`: The new number of discharge days (minimum 1)
+- **Description**: Changes the number of days to discharge the battery
+
+## 📊 Entity Attributes
+
+Each virtual battery entity provides the following attributes:
+
+- `discharge_days`: Number of days to discharge the battery
+- `last_reset`: Timestamp of the last battery level reset
+- `last_update`: Timestamp of the last battery level update
+
+## 📋 Examples
+
+### Service Call Examples
+
+```yaml
+# Reset battery level
+service: virtual_battery.reset_battery_level
+target:
+  entity_id: sensor.my_virtual_battery
+
+# Set battery level to 50%
+service: virtual_battery.set_battery_level
+target:
+  entity_id: sensor.my_virtual_battery
+data:
+  battery_level: 50
+
+# Set discharge days to 14
+service: virtual_battery.set_discharge_days
+target:
+  entity_id: sensor.my_virtual_battery
+data:
+  discharge_days: 14
+```
+
+### Dashboard Example
+
+```yaml
+type: entities
+entities:
+  - entity: sensor.my_virtual_battery
+    secondary_info: last-changed
+title: My Virtual Battery
+```
+
+## 📱 Dashboard Examples
+
+### Basic Card
+```yaml
+type: entities
+entities:
+  - entity: sensor.my_virtual_battery
+    secondary_info: last-changed
+  - entity: sensor.my_virtual_battery_time_since_reset
+  - entity: sensor.my_virtual_battery_time_until_empty
+title: My Virtual Battery
+```
+
+### Battery Card with Gauge
+```yaml
+type: vertical-stack
+cards:
+  - type: gauge
+    entity: sensor.my_virtual_battery
+    min: 0
+    max: 100
+    severity:
+      green: 50
+      yellow: 20
+      red: 10
+  - type: entities
+    entities:
+      - entity: sensor.my_virtual_battery_time_since_reset
+      - entity: sensor.my_virtual_battery_time_until_empty
+```
+
+### Template Examples
+```yaml
+# Format time since reset in a human-readable format
+sensor:
+  - platform: template
+    sensors:
+      virtual_battery_time_readable:
+        friendly_name: "Battery Age"
+        value_template: >
+          {% set days = states('sensor.my_virtual_battery_time_since_reset') | float %}
+          {% set total_hours = (days * 24) | round(0) %}
+          {% set days_part = ((total_hours / 24) | int) %}
+          {% set hours_part = (total_hours % 24) | int %}
+          {% if days_part > 0 %}
+            {{ days_part }}d {{ hours_part }}h
+          {% else %}
+            {{ hours_part }}h
+          {% endif %}
+```
+
+## 🔄 Automation Examples
+
+### Notify on Low Battery
+```yaml
+automation:
+  - alias: "Virtual Battery Low"
+    trigger:
+      platform: numeric_state
+      entity_id: sensor.my_virtual_battery
+      below: 20
+    action:
+      - service: notify.mobile_app
+        data:
+          title: "Virtual Battery Low"
+          message: "Battery level is {{ states('sensor.my_virtual_battery') }}%"
+          data:
+            icon: mdi:battery-low
+
+# Alternatively using the event:
+  - alias: "Virtual Battery Critical"
+    trigger:
+      platform: event
+      event_type: virtual_battery_critical
+    action:
+      - service: notify.mobile_app
+        data:
+          title: "Virtual Battery Critical!"
+          message: "Battery {{ trigger.event.data.entity_id }} is critically low at {{ trigger.event.data.battery_level }}%"
+```
+
+### Reset Battery on Schedule
+```yaml
+automation:
+  - alias: "Reset Virtual Battery Weekly"
+    trigger:
+      platform: time
+      at: "00:00:00"
+    condition:
+      condition: time
+      weekday: "monday"
+    action:
+      - service: virtual_battery.reset_battery_level
+        target:
+          entity_id: sensor.my_virtual_battery
+```
+
+### Adjust Discharge Days Based on Season
+```yaml
+automation:
+  - alias: "Adjust Battery Discharge - Summer"
+    trigger:
+      platform: time
+      at: "00:00:00"
+    condition:
+      condition: sun
+      after: summer_solstice
+      before: winter_solstice
+    action:
+      - service: virtual_battery.set_discharge_days
+        target:
+          entity_id: sensor.my_virtual_battery
+        data:
+          discharge_days: 45  # Longer discharge in summer
+```
+
+## 🎯 Events
+
+The integration fires events when battery levels cross certain thresholds:
+
+### Battery Full Event
+- **Event**: `virtual_battery_full`
+- **Triggered**: When battery level rises to 95% or above
+- **Data**: 
+  - `entity_id`: The entity ID of the virtual battery
+  - `battery_level`: Current battery level
+
+### Low Battery Event
+- **Event**: `virtual_battery_low`
+- **Triggered**: When battery level drops below 20%
+- **Data**: 
+  - `entity_id`: The entity ID of the virtual battery
+  - `battery_level`: Current battery level
+
+### Critical Battery Event
+- **Event**: `virtual_battery_critical`
+- **Triggered**: When battery level drops below 10%
+- **Data**: 
+  - `entity_id`: The entity ID of the virtual battery
+  - `battery_level`: Current battery level
+
+### Example Automation Using Events
+
+```yaml
+automation:
+  - alias: "Virtual Battery Low Alert"
+    trigger:
+      platform: event
+      event_type: virtual_battery_low
+    action:
+      - service: notify.mobile_app
+        data:
+          title: "Low Battery Alert"
+          message: "Virtual Battery {{ trigger.event.data.entity_id }} is at {{ trigger.event.data.battery_level }}%"
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📜 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👏 Credits
+
+Created and maintained by [Andy Bochmann](https://github.com/andybochmann)

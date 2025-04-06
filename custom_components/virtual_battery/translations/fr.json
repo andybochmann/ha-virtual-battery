@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configuration de la Batterie Virtuelle",
+        "description": "Configurez une batterie virtuelle avec une période de décharge réglable",
+        "data": {
+          "name": "Nom de la Batterie",
+          "discharge_days": "Période de Décharge (jours)"
+        }
+      }
+    },
+    "error": {
+      "discharge_days_invalid": "La période de décharge doit être d'au moins 1 jour"
+    },
+    "abort": {
+      "already_configured": "L'appareil est déjà configuré"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options de la Batterie Virtuelle",
+        "description": "Modifier la période de décharge pour cette batterie virtuelle",
+        "data": {
+          "discharge_days": "Période de Décharge (jours)"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "name": "Virtual Battery",
+  "homeassistant": "2023.8.0",
+  "hacs": "1.6.0"
+}

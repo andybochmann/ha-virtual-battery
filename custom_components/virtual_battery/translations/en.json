@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Virtual Battery Configuration",
+        "description": "Set up a virtual battery with configurable discharge period",
+        "data": {
+          "name": "Battery Name",
+          "discharge_days": "Discharge Period (days)"
+        }
+      }
+    },
+    "error": {
+      "discharge_days_invalid": "Discharge days must be at least 1"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Virtual Battery Options",
+        "description": "Modify the discharge period for this virtual battery",
+        "data": {
+          "discharge_days": "Discharge Period (days)"
+        }
+      }
+    }
+  }
+}

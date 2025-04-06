@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Virtuelle Batterie Konfiguration",
+        "description": "Richten Sie eine virtuelle Batterie mit konfigurierbarer Entladezeit ein",
+        "data": {
+          "name": "Batteriename",
+          "discharge_days": "Entladezeit (Tage)"
+        }
+      }
+    },
+    "error": {
+      "discharge_days_invalid": "Entladezeit muss mindestens 1 Tag betragen"
+    },
+    "abort": {
+      "already_configured": "Gerät ist bereits konfiguriert"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Virtuelle Batterie Optionen",
+        "description": "Ändern Sie die Entladezeit für diese virtuelle Batterie",
+        "data": {
+          "discharge_days": "Entladezeit (Tage)"
+        }
+      }
+    }
+  }
+}
