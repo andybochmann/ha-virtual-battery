@@ -3,8 +3,10 @@
 A custom Home Assistant integration that creates a virtual battery with configurable discharge periods.
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/andybochmann/ha-virtual-battery)
-![HACS Validation](https://img.shields.io/badge/HACS-Custom-orange.svg)
+![HACS Validation](https://img.shields.io/badge/HACS-Integration-blue.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=andybochmann&repository=ha-virtual-battery&category=integration)
 
 ## ✨ Features
 
