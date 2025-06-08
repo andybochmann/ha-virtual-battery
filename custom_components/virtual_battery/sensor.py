@@ -27,6 +27,12 @@ from .const import (
     CONF_DISCHARGE_DAYS,
     DOMAIN,
     SCAN_INTERVAL,
+    BATTERY_LEVEL_LOW,
+    BATTERY_LEVEL_CRITICAL,
+    BATTERY_LEVEL_CHARGING,
+    EVENT_BATTERY_LEVEL_LOW,
+    EVENT_BATTERY_LEVEL_CRITICAL,
+    EVENT_BATTERY_LEVEL_FULL
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -209,7 +215,7 @@ class VirtualBatterySensor(SensorEntity, RestoreEntity):
         if previous_level < BATTERY_LEVEL_CHARGING and self._battery_level >= BATTERY_LEVEL_CHARGING:
             self._at_full = True
             self._hass.bus.async_fire(
-                EVENT_BATTERY_FULL,
+                EVENT_BATTERY_LEVEL_FULL,
                 {"entity_id": self.entity_id, "battery_level": self._battery_level}
             )
         elif previous_level >= BATTERY_LEVEL_CHARGING and self._battery_level < BATTERY_LEVEL_CHARGING:
@@ -376,7 +382,7 @@ class TimeSinceResetSensor(SensorEntity):
     """Sensor for tracking time since last reset."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = "days"
+    _attr_native_unit_of_measurement = "d"
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_icon = "mdi:clock-start"
 
@@ -401,7 +407,7 @@ class TimeUntilEmptySensor(SensorEntity):
     """Sensor for tracking time until empty."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = "days"
+    _attr_native_unit_of_measurement = "d"
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_icon = "mdi:clock-end"
 

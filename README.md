@@ -23,11 +23,13 @@ A custom Home Assistant integration that creates a virtual battery with configur
 ## 📥 Installation
 
 ### HACS Installation
+
 1. Add this repository as a custom repository in HACS
 2. Search for "Virtual Battery" in HACS and install it
 3. Restart Home Assistant
 
 ### Manual Installation
+
 1. Download the latest release
 2. Extract the folder `virtual_battery` from the archive to: `<your-home-assistant-path>/config/custom_components/`
 3. Restart Home Assistant
@@ -35,14 +37,26 @@ A custom Home Assistant integration that creates a virtual battery with configur
 ## ⚙️ Configuration
 
 Configure the integration through the UI:
+
 1. Go to **Settings** → **Devices & Services**
 2. Click **+ Add Integration**
 3. Search for **Virtual Battery**
 4. Follow the configuration steps
 
+## 💡 Example Use Cases
+
+Virtual Battery is useful for devices that do not natively report battery status but require regular replacement or recharging. Some example scenarios:
+
+- **Smoke Detectors:** Track battery replacement intervals for detectors that lack smart battery reporting.
+- **Remote Controls:** Set up reminders to replace or recharge batteries in remotes that aren't integrated with Home Assistant.
+- **Key Finders/Trackers:** Monitor battery change intervals for Bluetooth trackers or key finders.
+
+By configuring a virtual battery with an appropriate discharge period, you can automate reminders and maintenance tasks for any device that needs regular attention.
+
 ## 🧰 Usage
 
 After configuration, you'll have a virtual battery device with two entities:
+
 1. A sensor showing the battery level that will automatically discharge over the configured time period
 2. A button that can be pressed to reset the battery level to 100%
 
@@ -51,12 +65,14 @@ After configuration, you'll have a virtual battery device with two entities:
 The integration provides the following services:
 
 ### Reset Battery Level
+
 - **Service**: `virtual_battery.reset_battery_level`
 - **Parameters**:
   - `entity_id`: The entity ID of the virtual battery to reset
 - **Description**: Resets the battery level to 100%
 
 ### Set Battery Level
+
 - **Service**: `virtual_battery.set_battery_level`
 - **Parameters**:
   - `entity_id`: The entity ID of the virtual battery to set
@@ -64,6 +80,7 @@ The integration provides the following services:
 - **Description**: Sets the battery level to a specific value
 
 ### Set Discharge Days
+
 - **Service**: `virtual_battery.set_discharge_days`
 - **Parameters**:
   - `entity_id`: The entity ID of the virtual battery to modify
@@ -116,6 +133,7 @@ title: My Virtual Battery
 ## 📱 Dashboard Examples
 
 ### Basic Card
+
 ```yaml
 type: entities
 entities:
@@ -127,6 +145,7 @@ title: My Virtual Battery
 ```
 
 ### Battery Card with Gauge
+
 ```yaml
 type: vertical-stack
 cards:
@@ -145,6 +164,7 @@ cards:
 ```
 
 ### Template Examples
+
 ```yaml
 # Format time since reset in a human-readable format
 sensor:
@@ -167,6 +187,7 @@ sensor:
 ## 🔄 Automation Examples
 
 ### Notify on Low Battery
+
 ```yaml
 automation:
   - alias: "Virtual Battery Low"
@@ -195,6 +216,7 @@ automation:
 ```
 
 ### Reset Battery on Schedule
+
 ```yaml
 automation:
   - alias: "Reset Virtual Battery Weekly"
@@ -211,6 +233,7 @@ automation:
 ```
 
 ### Adjust Discharge Days Based on Season
+
 ```yaml
 automation:
   - alias: "Adjust Battery Discharge - Summer"
@@ -234,23 +257,26 @@ automation:
 The integration fires events when battery levels cross certain thresholds:
 
 ### Battery Full Event
+
 - **Event**: `virtual_battery_full`
 - **Triggered**: When battery level rises to 95% or above
-- **Data**: 
+- **Data**:
   - `entity_id`: The entity ID of the virtual battery
   - `battery_level`: Current battery level
 
 ### Low Battery Event
+
 - **Event**: `virtual_battery_low`
 - **Triggered**: When battery level drops below 20%
-- **Data**: 
+- **Data**:
   - `entity_id`: The entity ID of the virtual battery
   - `battery_level`: Current battery level
 
 ### Critical Battery Event
+
 - **Event**: `virtual_battery_critical`
 - **Triggered**: When battery level drops below 10%
-- **Data**: 
+- **Data**:
   - `entity_id`: The entity ID of the virtual battery
   - `battery_level`: Current battery level
 
