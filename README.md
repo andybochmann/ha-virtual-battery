@@ -19,6 +19,7 @@ A custom Home Assistant integration that creates a virtual battery with configur
 - 🖥️ UI-based configuration
 - 📦 HACS installation support
 - 🔘 Device with reset button for each battery
+- 🔗 **Attach to existing devices** - Add battery tracking to devices that don't natively report battery status
 
 ## 📥 Installation
 
@@ -41,7 +42,22 @@ Configure the integration through the UI:
 1. Go to **Settings** → **Devices & Services**
 2. Click **+ Add Integration**
 3. Search for **Virtual Battery**
-4. Follow the configuration steps
+4. Follow the configuration steps:
+   - **Battery Name**: A unique name for your virtual battery
+   - **Discharge Period**: Number of days for the battery to fully discharge
+   - **Attach to Device** (optional): Select an existing device to add the battery entities to
+
+### Attaching to Existing Devices
+
+You can optionally attach the virtual battery entities to an existing device in Home Assistant. This is useful for:
+
+- Adding battery tracking to devices that don't natively report battery status
+- Keeping all related entities grouped under one device
+- Maintaining a cleaner device list
+
+If you leave the device selector empty, a new standalone "Virtual Battery" device will be created (default behavior).
+
+**Note:** If the target device is later removed from Home Assistant, the virtual battery entities will automatically fall back to a standalone device on the next restart.
 
 ## 💡 Example Use Cases
 
@@ -203,7 +219,7 @@ automation:
           data:
             icon: mdi:battery-low
 
-# Alternatively using the event:
+  # Alternatively using the event:
   - alias: "Virtual Battery Critical"
     trigger:
       platform: event
@@ -249,7 +265,7 @@ automation:
         target:
           entity_id: sensor.my_virtual_battery
         data:
-          discharge_days: 45  # Longer discharge in summer
+          discharge_days: 45 # Longer discharge in summer
 ```
 
 ## 🎯 Events

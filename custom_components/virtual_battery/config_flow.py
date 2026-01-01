@@ -4,11 +4,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.selector import DeviceSelector, DeviceSelectorConfig
 
 from .const import (
     DOMAIN,
     CONF_DISCHARGE_DAYS,
+    CONF_TARGET_DEVICE,
     DEFAULT_DISCHARGE_DAYS,
     MIN_DISCHARGE_DAYS
 )
@@ -30,14 +32,23 @@ class VirtualBatteryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if not user_input[CONF_DISCHARGE_DAYS] >= MIN_DISCHARGE_DAYS:
                     errors[CONF_DISCHARGE_DAYS] = "discharge_days_invalid"
                 else:
-                    # Check for duplicate names
-                    await self.async_set_unique_id(user_input["name"])
-                    self._abort_if_unique_id_configured()
+                    # Validate target device exists if specified
+                    target_device = user_input.get(CONF_TARGET_DEVICE)
+                    if target_device:
+                        device_registry = dr.async_get(self.hass)
+                        device = device_registry.async_get(target_device)
+                        if device is None:
+                            errors[CONF_TARGET_DEVICE] = "device_not_found"
+                    
+                    if not errors:
+                        # Check for duplicate names
+                        await self.async_set_unique_id(user_input["name"])
+                        self._abort_if_unique_id_configured()
 
-                    return self.async_create_entry(
-                        title=user_input["name"],
-                        data=user_input,
-                    )
+                        return self.async_create_entry(
+                            title=user_input["name"],
+                            data=user_input,
+                        )
             except Exception as ex:  # pylint: disable=broad-except
                 _LOGGER.error("Unexpected exception: %s", ex)
                 errors["base"] = "unknown"
@@ -49,6 +60,9 @@ class VirtualBatteryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_DISCHARGE_DAYS, default=DEFAULT_DISCHARGE_DAYS): vol.All(
                     vol.Coerce(int),
                     vol.Range(min=MIN_DISCHARGE_DAYS)
+                ),
+                vol.Optional(CONF_TARGET_DEVICE): DeviceSelector(
+                    DeviceSelectorConfig()
                 ),
             }),
             errors=errors,

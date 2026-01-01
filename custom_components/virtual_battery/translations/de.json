@@ -3,15 +3,20 @@
     "step": {
       "user": {
         "title": "Virtuelle Batterie Konfiguration",
-        "description": "Richten Sie eine virtuelle Batterie mit konfigurierbarer Entladezeit ein",
+        "description": "Richten Sie eine virtuelle Batterie mit konfigurierbarer Entladezeit ein. Optional kann sie einem vorhandenen Gerät zugewiesen werden.",
         "data": {
           "name": "Batteriename",
-          "discharge_days": "Entladezeit (Tage)"
+          "discharge_days": "Entladezeit (Tage)",
+          "target_device": "An Gerät anhängen (optional)"
+        },
+        "data_description": {
+          "target_device": "Wählen Sie ein vorhandenes Gerät aus, um die virtuellen Batterie-Entitäten hinzuzufügen. Lassen Sie das Feld leer, um ein eigenständiges virtuelles Batteriegerät zu erstellen."
         }
       }
     },
     "error": {
-      "discharge_days_invalid": "Entladezeit muss mindestens 1 Tag betragen"
+      "discharge_days_invalid": "Entladezeit muss mindestens 1 Tag betragen",
+      "device_not_found": "Ausgewähltes Gerät nicht gefunden"
     },
     "abort": {
       "already_configured": "Gerät ist bereits konfiguriert"
