@@ -6,6 +6,7 @@ DOMAIN = "virtual_battery"
 
 # Configuration
 CONF_DISCHARGE_DAYS = "discharge_days"
+CONF_TARGET_DEVICE = "target_device"
 DEFAULT_DISCHARGE_DAYS = 30
 MIN_DISCHARGE_DAYS = 1
 DEFAULT_NAME = "Virtual Battery"

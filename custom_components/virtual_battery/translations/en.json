@@ -3,15 +3,20 @@
     "step": {
       "user": {
         "title": "Virtual Battery Configuration",
-        "description": "Set up a virtual battery with configurable discharge period",
+        "description": "Set up a virtual battery with configurable discharge period. Optionally attach it to an existing device.",
         "data": {
           "name": "Battery Name",
-          "discharge_days": "Discharge Period (days)"
+          "discharge_days": "Discharge Period (days)",
+          "target_device": "Attach to Device (optional)"
+        },
+        "data_description": {
+          "target_device": "Select an existing device to attach the virtual battery entities to. Leave empty to create a standalone virtual battery device."
         }
       }
     },
     "error": {
-      "discharge_days_invalid": "Discharge days must be at least 1"
+      "discharge_days_invalid": "Discharge days must be at least 1",
+      "device_not_found": "Selected device not found"
     },
     "abort": {
       "already_configured": "Device is already configured"
