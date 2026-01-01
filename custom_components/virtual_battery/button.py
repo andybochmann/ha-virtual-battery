@@ -7,7 +7,6 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.restore_state import RestoreEntity
 

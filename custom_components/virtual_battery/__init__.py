@@ -1,5 +1,4 @@
 """The Virtual Battery integration."""
-import asyncio
 import logging
 import voluptuous as vol
 
@@ -26,26 +25,10 @@ PLATFORMS = [Platform.SENSOR, Platform.BUTTON]
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Virtual Battery component."""
-    return True
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Virtual Battery from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
+def _register_services(hass: HomeAssistant) -> None:
+    """Register services for the Virtual Battery integration."""
     
-    # Ensure we have a consistent data structure
-    if "entities" not in hass.data[DOMAIN]:
-        hass.data[DOMAIN]["entities"] = []
-        
-    hass.data[DOMAIN][entry.entry_id] = entry.data
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # Register update listener for config entry changes
-    entry.async_on_unload(entry.add_update_listener(async_update_options))
-
-    # Register services
     async def reset_battery_level(call: ServiceCall) -> None:
         """Reset battery level to 100%."""
         entity_id = call.data["entity_id"]
@@ -77,7 +60,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     await entity.async_set_discharge_days(discharge_days)
                     break
 
-    # Register services
     hass.services.async_register(
         DOMAIN, SERVICE_RESET_BATTERY_LEVEL, reset_battery_level,
         schema=vol.Schema({
@@ -108,6 +90,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ),
         })
     )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Virtual Battery component."""
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Virtual Battery from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
+    
+    # Ensure we have a consistent data structure
+    if "entities" not in hass.data[DOMAIN]:
+        hass.data[DOMAIN]["entities"] = []
+    
+    # Register services only once (when first entry is set up)
+    if not hass.services.has_service(DOMAIN, SERVICE_RESET_BATTERY_LEVEL):
+        _register_services(hass)
+        
+    hass.data[DOMAIN][entry.entry_id] = entry.data
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Register update listener for config entry changes
+    entry.async_on_unload(entry.add_update_listener(async_update_options))
 
     return True
 
@@ -145,6 +152,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id, None)
+        
+        # Remove entities associated with this entry from the entities list
+        if "entities" in hass.data[DOMAIN]:
+            hass.data[DOMAIN]["entities"] = [
+                entity for entity in hass.data[DOMAIN]["entities"]
+                if not (hasattr(entity, '_entry_id') and entity._entry_id == entry.entry_id)
+            ]
 
     return unload_ok

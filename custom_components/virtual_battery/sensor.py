@@ -1,7 +1,6 @@
 """Sensor platform for the Virtual Battery integration."""
 import logging
 from datetime import datetime, timedelta
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -158,9 +157,22 @@ class VirtualBatterySensor(SensorEntity, RestoreEntity):
             attrs = last_state.attributes
             
             if ATTR_LAST_RESET in attrs and ATTR_LAST_UPDATE in attrs and ATTR_DISCHARGE_DAYS in attrs:
-                self._last_reset = datetime.fromisoformat(attrs[ATTR_LAST_RESET])
-                self._last_update = datetime.fromisoformat(attrs[ATTR_LAST_UPDATE])
+                # Parse datetime and ensure timezone awareness
+                last_reset = datetime.fromisoformat(attrs[ATTR_LAST_RESET])
+                last_update = datetime.fromisoformat(attrs[ATTR_LAST_UPDATE])
+                
+                # Ensure timezone awareness - if naive, assume UTC
+                if last_reset.tzinfo is None:
+                    last_reset = last_reset.replace(tzinfo=dt_util.UTC)
+                if last_update.tzinfo is None:
+                    last_update = last_update.replace(tzinfo=dt_util.UTC)
+                
+                self._last_reset = last_reset
+                self._last_update = last_update
                 self._discharge_days = attrs[ATTR_DISCHARGE_DAYS]
+                
+                # Always recalculate discharge rate with restored discharge_days
+                self._calculate_discharge_rate()
                 
                 # Try to restore the state value
                 if last_state.state not in (None, '', 'unknown', 'unavailable'):
@@ -169,13 +181,11 @@ class VirtualBatterySensor(SensorEntity, RestoreEntity):
                         self._battery_level = float(last_state.state)
                     except (ValueError, TypeError):
                         # Fall back to calculating based on time since last reset
-                        self._calculate_discharge_rate()
                         self._calculate_current_battery_level()
                         _LOGGER.warning("Could not convert state %s to float, calculated level: %.2f", 
                                        last_state.state, self._battery_level)
                 else:
                     # If state isn't available, calculate based on time since last reset
-                    self._calculate_discharge_rate()
                     self._calculate_current_battery_level()
                 
                 _LOGGER.debug(
@@ -324,12 +334,31 @@ class VirtualBatterySensor(SensorEntity, RestoreEntity):
 
     def _notify_sensors(self):
         """Notify associated time sensors to update their state."""
-        # Find and update all sensor entities that match our entry_id
-        if DOMAIN in self._hass.data and "entities" in self._hass.data[DOMAIN]:
-            for entity in self._hass.data[DOMAIN].get("entities", []):
-                if isinstance(entity, (TimeSinceResetSensor, TimeUntilEmptySensor)) and \
-                   entity._battery_sensor.entity_id == self.entity_id:
-                    entity.async_write_ha_state()
+        # Schedule state updates for the time sensors
+        # They will pick up the new values from their native_value properties
+        # which reference this battery sensor's calculation methods
+        if self.hass is not None:
+            self.hass.async_create_task(self._async_update_time_sensors())
+
+    async def _async_update_time_sensors(self):
+        """Update time sensors by triggering their state write."""
+        # The time sensors get their values from the battery sensor's methods,
+        # so we just need to trigger a state update on entities that belong to our device
+        entity_registry = self._hass.helpers.entity_registry.async_get(self._hass)
+        if entity_registry:
+            for entity_entry in entity_registry.entities.values():
+                if (entity_entry.unique_id and 
+                    entity_entry.unique_id.startswith(self._attr_unique_id) and
+                    entity_entry.unique_id != self._attr_unique_id):
+                    # This is a related sensor (time_since_reset or time_until_empty)
+                    entity = self._hass.states.get(entity_entry.entity_id)
+                    if entity:
+                        # Trigger state update by getting the entity and calling async_write_ha_state
+                        component = self._hass.data.get("sensor")
+                        if component:
+                            sensor_entity = component.get_entity(entity_entry.entity_id)
+                            if sensor_entity and hasattr(sensor_entity, 'async_write_ha_state'):
+                                sensor_entity.async_write_ha_state()
 
     async def async_reset_battery(self):
         """Reset battery level to 100%."""
@@ -368,27 +397,6 @@ class VirtualBatterySensor(SensorEntity, RestoreEntity):
         self._last_update = dt_util.utcnow()
         self.async_write_ha_state()
 
-    def _format_timedelta(self, td):
-        """Format a timedelta into a human-readable string."""
-        # Extract days, hours, minutes
-        days = td.days
-        hours, remainder = divmod(td.seconds, 3600)
-        minutes, _ = divmod(remainder, 60)
-        
-        # Format the string
-        parts = []
-        if days > 0:
-            parts.append(f"{days} day{'s' if days != 1 else ''}")
-        if hours > 0:
-            parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
-        if minutes > 0:
-            parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
-            
-        if not parts:
-            return "0 minutes"
-            
-        return ", ".join(parts)
-        
     def _calculate_time_since_reset(self):
         """Calculate the time since the last battery reset in days as a float."""
         current_time = dt_util.utcnow()
