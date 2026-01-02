@@ -57,7 +57,11 @@ You can optionally attach the virtual battery entities to an existing device in 
 
 If you leave the device selector empty, a new standalone "Virtual Battery" device will be created (default behavior).
 
-**Note:** If the target device is later removed from Home Assistant, the virtual battery entities will automatically fall back to a standalone device on the next restart.
+**Important Limitations:**
+
+- Device assignment can **only be set during initial creation** and cannot be changed later through the options flow
+- If you need to change the device assignment, you must delete the virtual battery integration and recreate it with the new device selection
+- If the target device is later removed from Home Assistant, the virtual battery entities will automatically fall back to a standalone device on the next restart
 
 ## 💡 Example Use Cases
 

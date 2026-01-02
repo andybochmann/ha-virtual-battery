@@ -10,7 +10,7 @@
           "target_device": "Attacher à un appareil (optionnel)"
         },
         "data_description": {
-          "target_device": "Sélectionnez un appareil existant pour y attacher les entités de la batterie virtuelle. Laissez vide pour créer un appareil de batterie virtuelle autonome."
+          "target_device": "Sélectionnez un appareil existant pour y attacher les entités de la batterie virtuelle. Laissez vide pour créer un appareil de batterie virtuelle autonome. ⚠️ Note : L'attribution de l'appareil ne peut être définie que lors de la création initiale et ne peut pas être modifiée ultérieurement."
         }
       }
     },
@@ -26,7 +26,7 @@
     "step": {
       "init": {
         "title": "Options de la Batterie Virtuelle",
-        "description": "Modifier la période de décharge pour cette batterie virtuelle",
+        "description": "Modifier la période de décharge pour cette batterie virtuelle. Note : L'attribution de l'appareil ne peut pas être modifiée après la création. Pour réattribuer à un autre appareil, supprimez et recréez la batterie virtuelle.",
         "data": {
           "discharge_days": "Période de Décharge (jours)"
         }

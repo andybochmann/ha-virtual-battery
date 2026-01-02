@@ -10,7 +10,7 @@
           "target_device": "An Gerät anhängen (optional)"
         },
         "data_description": {
-          "target_device": "Wählen Sie ein vorhandenes Gerät aus, um die virtuellen Batterie-Entitäten hinzuzufügen. Lassen Sie das Feld leer, um ein eigenständiges virtuelles Batteriegerät zu erstellen."
+          "target_device": "Wählen Sie ein vorhandenes Gerät aus, um die virtuellen Batterie-Entitäten hinzuzufügen. Lassen Sie das Feld leer, um ein eigenständiges virtuelles Batteriegerät zu erstellen. ⚠️ Hinweis: Die Gerätezuordnung kann nur bei der Erstellung festgelegt und später nicht mehr geändert werden."
         }
       }
     },
@@ -26,7 +26,7 @@
     "step": {
       "init": {
         "title": "Virtuelle Batterie Optionen",
-        "description": "Ändern Sie die Entladezeit für diese virtuelle Batterie",
+        "description": "Ändern Sie die Entladezeit für diese virtuelle Batterie. Hinweis: Die Gerätezuordnung kann nach der Erstellung nicht mehr geändert werden. Um die Batterie einem anderen Gerät zuzuordnen, löschen und erstellen Sie die virtuelle Batterie neu.",
         "data": {
           "discharge_days": "Entladezeit (Tage)"
         }

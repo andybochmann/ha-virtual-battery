@@ -10,7 +10,7 @@
           "target_device": "Attach to Device (optional)"
         },
         "data_description": {
-          "target_device": "Select an existing device to attach the virtual battery entities to. Leave empty to create a standalone virtual battery device."
+          "target_device": "Select an existing device to attach the virtual battery entities to. Leave empty to create a standalone virtual battery device. ⚠️ Note: Device assignment can only be set during initial creation and cannot be changed later."
         }
       }
     },
@@ -26,7 +26,7 @@
     "step": {
       "init": {
         "title": "Virtual Battery Options",
-        "description": "Modify the discharge period for this virtual battery",
+        "description": "Modify the discharge period for this virtual battery. Note: Device assignment cannot be changed after creation. To reassign to a different device, delete and recreate the virtual battery.",
         "data": {
           "discharge_days": "Discharge Period (days)"
         }
