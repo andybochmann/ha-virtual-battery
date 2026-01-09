@@ -1,0 +1,25 @@
+# CODEOWNERS file for ha-virtual-battery
+# This file defines code ownership and review requirements
+# More specific patterns override less specific ones
+
+# Default owner for all files
+* @andybochmann
+
+# GitHub workflows and CI/CD configuration (security-sensitive)
+/.github/workflows/ @andybochmann
+
+# Core component code (security-sensitive)
+/custom_components/virtual_battery/ @andybochmann
+
+# Configuration flow (handles user input and setup - security-sensitive)
+/custom_components/virtual_battery/config_flow.py @andybochmann
+
+# Services configuration (defines component capabilities - security-sensitive)
+/custom_components/virtual_battery/services.yaml @andybochmann
+
+# Component initialization (security-sensitive)
+/custom_components/virtual_battery/__init__.py @andybochmann
+
+# Repository configuration files
+/.github/ @andybochmann
+/hacs.json @andybochmann
