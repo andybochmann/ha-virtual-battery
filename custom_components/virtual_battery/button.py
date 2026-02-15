@@ -53,6 +53,8 @@ async def async_setup_entry(
 class VirtualBatteryResetButton(ButtonEntity, RestoreEntity):
     """Implementation of a Virtual Battery Reset button."""
 
+    _attr_icon = "mdi:battery-sync"
+
     def __init__(self, hass, entry_id, name, device_info: DeviceInfo):
         """Initialize the Virtual Battery Reset button."""
         self._hass = hass
