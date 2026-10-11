@@ -6,7 +6,7 @@
         "description": "Configurez une batterie virtuelle avec une période de décharge réglable. Vous pouvez optionnellement l'attacher à un appareil existant.",
         "data": {
           "name": "Nom de la Batterie",
-          "discharge_days": "Période de Décharge (jours)",
+          "discharge_days": "Période de Décharge",
           "target_device": "Attacher à un appareil (optionnel)"
         },
         "data_description": {
@@ -15,7 +15,7 @@
       }
     },
     "error": {
-      "discharge_days_invalid": "La période de décharge doit être d'au moins 1 jour",
+      "discharge_days_invalid": "La période de décharge doit être d'au moins 1 minute",
       "device_not_found": "Appareil sélectionné introuvable"
     },
     "abort": {
@@ -28,9 +28,12 @@
         "title": "Options de la Batterie Virtuelle",
         "description": "Modifier la période de décharge pour cette batterie virtuelle. Note : L'attribution de l'appareil ne peut pas être modifiée après la création. Pour réattribuer à un autre appareil, supprimez et recréez la batterie virtuelle.",
         "data": {
-          "discharge_days": "Période de Décharge (jours)"
+          "discharge_days": "Période de Décharge"
         }
       }
+    },
+    "error": {
+      "discharge_days_invalid": "La période de décharge doit être d'au moins 1 minute"
     }
   }
 }

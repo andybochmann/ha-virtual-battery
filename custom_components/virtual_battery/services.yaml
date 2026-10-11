@@ -57,13 +57,13 @@ set_discharge_days:
           integration: virtual_battery
     discharge_days:
       name: Discharge Days
-      description: Number of days to discharge the battery (minimum 1).
+      description: Number of days to discharge the battery. Decimals allowed, e.g. 0.25 = 6 hours. Minimum 1 minute (about 0.0007).
       required: true
       advanced: false
       example: 30
       selector:
         number:
-          min: 1
-          step: 1
+          min: 0
+          step: any
           mode: box
           unit_of_measurement: "days"

@@ -5,7 +5,12 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.selector import DeviceSelector, DeviceSelectorConfig
+from homeassistant.helpers.selector import (
+    DeviceSelector,
+    DeviceSelectorConfig,
+    DurationSelector,
+    DurationSelectorConfig,
+)
 
 from .const import (
     DOMAIN,
@@ -16,6 +21,22 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+DURATION_SELECTOR = DurationSelector(DurationSelectorConfig(enable_day=True))
+
+
+def _duration_to_days(duration: dict) -> float:
+    """Convert a duration selector value to fractional days."""
+    return cv.time_period_dict(duration).total_seconds() / 86400
+
+
+def _days_to_duration(days: float) -> dict:
+    """Convert fractional days to a duration selector value."""
+    total_seconds = round(days * 86400)
+    whole_days, remainder = divmod(total_seconds, 86400)
+    hours, remainder = divmod(remainder, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return {"days": whole_days, "hours": hours, "minutes": minutes, "seconds": seconds}
 
 class VirtualBatteryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Virtual Battery."""
@@ -28,8 +49,8 @@ class VirtualBatteryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                # Validate discharge days
-                if not user_input[CONF_DISCHARGE_DAYS] >= MIN_DISCHARGE_DAYS:
+                discharge_days = _duration_to_days(user_input[CONF_DISCHARGE_DAYS])
+                if discharge_days < MIN_DISCHARGE_DAYS:
                     errors[CONF_DISCHARGE_DAYS] = "discharge_days_invalid"
                 else:
                     # Validate target device exists if specified
@@ -47,7 +68,7 @@ class VirtualBatteryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                         return self.async_create_entry(
                             title=user_input["name"],
-                            data=user_input,
+                            data={**user_input, CONF_DISCHARGE_DAYS: discharge_days},
                         )
             except Exception as ex:  # pylint: disable=broad-except
                 _LOGGER.error("Unexpected exception: %s", ex)
@@ -57,10 +78,9 @@ class VirtualBatteryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema({
                 vol.Required("name"): str,
-                vol.Required(CONF_DISCHARGE_DAYS, default=DEFAULT_DISCHARGE_DAYS): vol.All(
-                    vol.Coerce(int),
-                    vol.Range(min=MIN_DISCHARGE_DAYS)
-                ),
+                vol.Required(
+                    CONF_DISCHARGE_DAYS, default=_days_to_duration(DEFAULT_DISCHARGE_DAYS)
+                ): DURATION_SELECTOR,
                 vol.Optional(CONF_TARGET_DEVICE): DeviceSelector(
                     DeviceSelectorConfig()
                 ),
@@ -83,13 +103,14 @@ class VirtualBatteryOptionsFlow(config_entries.OptionsFlow):
 
         if user_input is not None:
             try:
-                if not user_input[CONF_DISCHARGE_DAYS] >= MIN_DISCHARGE_DAYS:
+                discharge_days = _duration_to_days(user_input[CONF_DISCHARGE_DAYS])
+                if discharge_days < MIN_DISCHARGE_DAYS:
                     errors[CONF_DISCHARGE_DAYS] = "discharge_days_invalid"
                 else:
                     # Update data in config entry
-                    data = {**self.config_entry.data, CONF_DISCHARGE_DAYS: user_input[CONF_DISCHARGE_DAYS]}
+                    data = {**self.config_entry.data, CONF_DISCHARGE_DAYS: discharge_days}
                     self.hass.config_entries.async_update_entry(self.config_entry, data=data)
-                    return self.async_create_entry(title="", data=user_input)
+                    return self.async_create_entry(title="", data={CONF_DISCHARGE_DAYS: discharge_days})
             except Exception as ex:  # pylint: disable=broad-except
                 _LOGGER.error("Unexpected exception: %s", ex)
                 errors["base"] = "unknown"
@@ -99,11 +120,10 @@ class VirtualBatteryOptionsFlow(config_entries.OptionsFlow):
             data_schema=vol.Schema({
                 vol.Required(
                     CONF_DISCHARGE_DAYS,
-                    default=self.config_entry.data.get(CONF_DISCHARGE_DAYS, DEFAULT_DISCHARGE_DAYS)
-                ): vol.All(
-                    vol.Coerce(int),
-                    vol.Range(min=MIN_DISCHARGE_DAYS)
-                ),
+                    default=_days_to_duration(
+                        self.config_entry.data.get(CONF_DISCHARGE_DAYS, DEFAULT_DISCHARGE_DAYS)
+                    )
+                ): DURATION_SELECTOR,
             }),
             errors=errors,
         )
