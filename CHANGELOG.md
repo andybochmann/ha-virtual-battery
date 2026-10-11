@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Discharge periods shorter than a day: setup and options now use a days/hours/minutes picker, minimum 1 minute (#6)
 - `set_discharge_days` service accepts fractional days (e.g. `0.25` for 6 hours)
+- Fix: adding a battery with a name that already exists now shows "already configured" instead of an unknown error
 - Time Since Reset and Time Until Empty sensors show 4 decimals (about 9 seconds) for batteries shorter than a day; switch their display unit to minutes in the entity settings for easier reading
 
 ## [1.1.0] - 2026-01-02

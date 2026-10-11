@@ -4,6 +4,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.selector import (
     DeviceSelector,
@@ -70,6 +71,8 @@ class VirtualBatteryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             title=user_input["name"],
                             data={**user_input, CONF_DISCHARGE_DAYS: discharge_days},
                         )
+            except AbortFlow:
+                raise
             except Exception as ex:  # pylint: disable=broad-except
                 _LOGGER.error("Unexpected exception: %s", ex)
                 errors["base"] = "unknown"
