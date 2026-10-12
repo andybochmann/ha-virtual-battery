@@ -12,7 +12,6 @@ from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -35,41 +34,9 @@ from .const import (
     EVENT_BATTERY_LEVEL_CRITICAL,
     EVENT_BATTERY_LEVEL_FULL
 )
+from .device import attach_device, get_device
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def get_device_info(hass: HomeAssistant, entry_id: str, name: str, target_device_id: str | None) -> DeviceInfo:
-    """Get device info, either for existing device or create new one."""
-    if target_device_id:
-        device_registry = dr.async_get(hass)
-        device = device_registry.async_get(target_device_id)
-        if device:
-            _LOGGER.debug(
-                "Attaching virtual battery '%s' to existing device: %s (identifiers: %s)",
-                name,
-                device.name,
-                device.identifiers
-            )
-            # Return DeviceInfo that will attach to the existing device
-            return DeviceInfo(
-                identifiers=device.identifiers,
-            )
-        else:
-            _LOGGER.warning(
-                "Target device %s not found, creating standalone device for '%s'",
-                target_device_id,
-                name
-            )
-    
-    # Create a new standalone device (default behavior)
-    return DeviceInfo(
-        identifiers={(DOMAIN, entry_id)},
-        name=name,
-        manufacturer="Virtual Battery",
-        model="Virtual Battery Sensor",
-        entry_type=DeviceEntryType.SERVICE,
-    )
 
 
 async def async_setup_entry(
@@ -80,12 +47,12 @@ async def async_setup_entry(
     discharge_days = entry.data[CONF_DISCHARGE_DAYS]
     target_device = entry.data.get(CONF_TARGET_DEVICE)
 
-    # Get device info (either for existing device or new one)
-    device_info = get_device_info(hass, entry.entry_id, name, target_device)
+    # The picked existing device, or the battery's own device
+    device = get_device(hass, entry.entry_id, name, target_device)
 
-    battery_sensor = VirtualBatterySensor(hass, entry.entry_id, name, discharge_days, device_info, target_device)
-    time_since_reset_sensor = TimeSinceResetSensor(battery_sensor, name, device_info)
-    time_until_empty_sensor = TimeUntilEmptySensor(battery_sensor, name, device_info)
+    battery_sensor = VirtualBatterySensor(hass, entry.entry_id, name, discharge_days, device, target_device)
+    time_since_reset_sensor = TimeSinceResetSensor(battery_sensor, name, device)
+    time_until_empty_sensor = TimeUntilEmptySensor(battery_sensor, name, device)
     battery_sensor._time_sensors = (time_since_reset_sensor, time_until_empty_sensor)
 
     async_add_entities([battery_sensor, time_since_reset_sensor, time_until_empty_sensor])
@@ -104,7 +71,7 @@ class VirtualBatterySensor(SensorEntity, RestoreEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, hass, entry_id, name, discharge_days, device_info: DeviceInfo, target_device_id: str | None = None):
+    def __init__(self, hass, entry_id, name, discharge_days, device: DeviceInfo | dr.DeviceEntry, target_device_id: str | None = None):
         """Initialize the Virtual Battery sensor."""
         super().__init__()
         self._hass = hass
@@ -127,8 +94,7 @@ class VirtualBatterySensor(SensorEntity, RestoreEntity):
         # Calculate discharge rate
         self._calculate_discharge_rate()
         
-        # Set up device info (passed in from setup to handle target device logic)
-        self._attr_device_info = device_info
+        attach_device(self, device)
         
         # Don't restore state here - will be done in async_added_to_hass
 
@@ -415,12 +381,12 @@ class TimeSinceResetSensor(SensorEntity):
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_icon = "mdi:clock-start"
 
-    def __init__(self, battery_sensor, name: str, device_info: DeviceInfo):
+    def __init__(self, battery_sensor, name: str, device: DeviceInfo | dr.DeviceEntry):
         """Initialize the Time Since Reset sensor."""
         self._battery_sensor = battery_sensor
         self._attr_name = f"{name} Time Since Reset"
         self._attr_unique_id = f"{battery_sensor.unique_id}_time_since_reset"
-        self._attr_device_info = device_info
+        attach_device(self, device)
 
     @property
     def native_value(self):
@@ -440,12 +406,12 @@ class TimeUntilEmptySensor(SensorEntity):
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_icon = "mdi:clock-end"
 
-    def __init__(self, battery_sensor, name: str, device_info: DeviceInfo):
+    def __init__(self, battery_sensor, name: str, device: DeviceInfo | dr.DeviceEntry):
         """Initialize the Time Until Empty sensor."""
         self._battery_sensor = battery_sensor
         self._attr_name = f"{name} Time Until Empty"
         self._attr_unique_id = f"{battery_sensor.unique_id}_time_until_empty"
-        self._attr_device_info = device_info
+        attach_device(self, device)
 
     @property
     def native_value(self):

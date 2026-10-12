@@ -11,30 +11,9 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN, CONF_TARGET_DEVICE
+from .device import attach_device, get_device
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def get_button_device_info(hass: HomeAssistant, entry_id: str, target_device_id: str | None) -> DeviceInfo:
-    """Get device info for button, either for existing device or the virtual battery device."""
-    if target_device_id:
-        device_registry = dr.async_get(hass)
-        device = device_registry.async_get(target_device_id)
-        if device:
-            # Return DeviceInfo that will attach to the existing device
-            return DeviceInfo(
-                identifiers=device.identifiers,
-            )
-        else:
-            _LOGGER.warning(
-                "Target device %s not found for button, using virtual battery device",
-                target_device_id
-            )
-    
-    # Use the virtual battery device identifiers
-    return DeviceInfo(
-        identifiers={(DOMAIN, entry_id)},
-    )
 
 
 async def async_setup_entry(
@@ -44,10 +23,10 @@ async def async_setup_entry(
     name = entry.data[CONF_NAME]
     target_device = entry.data.get(CONF_TARGET_DEVICE)
     
-    # Get device info (either for existing device or virtual battery device)
-    device_info = get_button_device_info(hass, entry.entry_id, target_device)
+    # The picked existing device, or the battery's own device
+    device = get_device(hass, entry.entry_id, name, target_device)
     
-    button = VirtualBatteryResetButton(hass, entry.entry_id, name, device_info)
+    button = VirtualBatteryResetButton(hass, entry.entry_id, name, device)
     async_add_entities([button])
 
 class VirtualBatteryResetButton(ButtonEntity, RestoreEntity):
@@ -55,15 +34,14 @@ class VirtualBatteryResetButton(ButtonEntity, RestoreEntity):
 
     _attr_icon = "mdi:battery-arrow-up"
 
-    def __init__(self, hass, entry_id, name, device_info: DeviceInfo):
+    def __init__(self, hass, entry_id, name, device: DeviceInfo | dr.DeviceEntry):
         """Initialize the Virtual Battery Reset button."""
         self._hass = hass
         self._entry_id = entry_id
         self._attr_name = f"{name} Reset"
         self._attr_unique_id = f"{DOMAIN}_{entry_id}_reset"
         
-        # Set up device info (passed in from setup to handle target device logic)
-        self._attr_device_info = device_info
+        attach_device(self, device)
 
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
