@@ -68,7 +68,8 @@ def get_device(
 
 def attach_device(entity: Entity, device: DeviceInfo | dr.DeviceEntry) -> None:
     """Attach an entity to what get_device returned."""
-    if isinstance(device, dict):
-        entity._attr_device_info = device
-    else:
+    # Check for the entry: DeviceInfo is a TypedDict today but may become a dataclass.
+    if isinstance(device, dr.DeviceEntry):
         entity.device_entry = device
+    else:
+        entity._attr_device_info = device
