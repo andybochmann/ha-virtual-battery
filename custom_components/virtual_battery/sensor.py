@@ -15,7 +15,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.restore_state import RestoredExtraData, RestoreEntity
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -144,12 +144,25 @@ class VirtualBatterySensor(SensorEntity, RestoreEntity):
             )
         )
 
+    @property
+    def extra_restore_state_data(self) -> RestoredExtraData:
+        """Store which config entry the saved state belongs to."""
+        return RestoredExtraData({"entry_id": self._entry_id})
+
     async def _async_restore_state_from_last_stored(self):
         """Restore state using RestoreEntity."""
         last_state = await self.async_get_last_state()
         
         if last_state is None:
             _LOGGER.debug("No previous state found for %s", self.entity_id)
+            return
+
+        # Saved states are keyed by entity_id, so a deleted battery's state would
+        # otherwise leak into a new battery created with the same name. States saved
+        # before entry_id was stored have no extra data and are restored as before.
+        last_extra = await self.async_get_last_extra_data()
+        if last_extra is not None and last_extra.as_dict().get("entry_id") != self._entry_id:
+            _LOGGER.debug("Ignoring saved state for %s from a deleted battery", self.entity_id)
             return
 
         try:
