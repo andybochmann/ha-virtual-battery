@@ -5,7 +5,7 @@ All notable changes to the Virtual Battery integration will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.2.0] - 2026-10-12
 
 - Discharge periods shorter than a day: setup and options now use a days/hours/minutes picker, minimum 1 minute (#6, #7)
 - `set_discharge_days` service accepts fractional days (e.g. `0.25` for 6 hours) (#7)
