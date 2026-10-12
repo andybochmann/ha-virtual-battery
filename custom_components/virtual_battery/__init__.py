@@ -78,7 +78,7 @@ def _register_services(hass: HomeAssistant) -> None:
         schema=vol.Schema({
             vol.Required("entity_id"): cv.entity_ids,
             vol.Required(ATTR_DISCHARGE_DAYS): vol.All(
-                vol.Coerce(int), vol.Range(min=MIN_DISCHARGE_DAYS)
+                vol.Coerce(float), vol.Range(min=MIN_DISCHARGE_DAYS)
             ),
         })
     )
@@ -125,7 +125,7 @@ async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
                         if CONF_DISCHARGE_DAYS in entry.data:
                             await entity.async_set_discharge_days(entry.data[CONF_DISCHARGE_DAYS])
                             _LOGGER.debug(
-                                "Updated discharge days for %s to %d from config entry",
+                                "Updated discharge days for %s to %s from config entry",
                                 entity.entity_id,
                                 entry.data[CONF_DISCHARGE_DAYS],
                             )

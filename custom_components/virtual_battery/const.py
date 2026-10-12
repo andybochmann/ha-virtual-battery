@@ -8,7 +8,8 @@ DOMAIN = "virtual_battery"
 CONF_DISCHARGE_DAYS = "discharge_days"
 CONF_TARGET_DEVICE = "target_device"
 DEFAULT_DISCHARGE_DAYS = 30
-MIN_DISCHARGE_DAYS = 1
+# One minute, matching SCAN_INTERVAL; shorter batteries would empty between updates.
+MIN_DISCHARGE_DAYS = 1 / (24 * 60)
 DEFAULT_NAME = "Virtual Battery"
 
 # Attributes

@@ -39,6 +39,13 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def _round_days(days: float, discharge_days: float) -> float:
+    """Round a duration in days to a resolution that fits the discharge period."""
+    # 0.01 d (~14 min) suits day-scale batteries and keeps recorder writes low;
+    # shorter batteries need ~9 s resolution to be useful.
+    return round(days, 2 if discharge_days >= 1 else 4)
+
+
 def get_device_info(hass: HomeAssistant, entry_id: str, name: str, target_device_id: str | None) -> DeviceInfo:
     """Get device info, either for existing device or create new one."""
     if target_device_id:
@@ -202,7 +209,7 @@ class VirtualBatterySensor(SensorEntity, RestoreEntity):
                     self._calculate_current_battery_level()
                 
                 _LOGGER.debug(
-                    "Restored state for %s: level=%.2f, discharge_days=%d, last_reset=%s",
+                    "Restored state for %s: level=%.2f, discharge_days=%s, last_reset=%s",
                     self.entity_id, 
                     self._battery_level, 
                     self._discharge_days, 
@@ -319,7 +326,7 @@ class VirtualBatterySensor(SensorEntity, RestoreEntity):
         # Log significant changes for debugging
         if abs(previous_level - self._battery_level) > 1.0:
             _LOGGER.debug(
-                "%s: Battery level changed from %.2f%% to %.2f%% (discharge days: %d, last reset: %s)",
+                "%s: Battery level changed from %.2f%% to %.2f%% (discharge days: %s, last reset: %s)",
                 self.entity_id,
                 previous_level,
                 self._battery_level,
@@ -451,7 +458,9 @@ class TimeSinceResetSensor(SensorEntity):
 
     @property
     def native_value(self):
-        return round(self._battery_sensor._calculate_time_since_reset(), 2)
+        return _round_days(
+            self._battery_sensor._calculate_time_since_reset(), self._battery_sensor._discharge_days
+        )
 
     @property
     def extra_state_attributes(self):
@@ -476,7 +485,9 @@ class TimeUntilEmptySensor(SensorEntity):
 
     @property
     def native_value(self):
-        return round(self._battery_sensor._calculate_time_until_empty(), 2)
+        return _round_days(
+            self._battery_sensor._calculate_time_until_empty(), self._battery_sensor._discharge_days
+        )
 
     @property
     def extra_state_attributes(self):
