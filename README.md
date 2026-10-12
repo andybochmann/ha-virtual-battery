@@ -86,6 +86,8 @@ After configuration, you'll have a virtual battery device with four entities (fo
 
 The battery level updates once a minute. Very short discharge periods (under about 100 minutes) therefore drop in visible steps, e.g. a 10-minute battery loses 10% per update.
 
+The two time sensors show minutes for discharge periods under 2 hours, hours for periods under a day, and days otherwise. Home Assistant picks this unit once, when the battery is created, so a battery whose period you change later (or one created with an earlier version) keeps its unit. To change it, open the sensor's settings in Home Assistant and pick another unit of measurement.
+
 ## 🛠️ Services
 
 The integration provides the following services:
