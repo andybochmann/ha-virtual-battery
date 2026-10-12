@@ -62,6 +62,7 @@ If you leave the device selector empty, a new standalone "Virtual Battery" devic
 - Device assignment can **only be set during initial creation** and cannot be changed later through the options flow
 - If you need to change the device assignment, you must delete the virtual battery integration and recreate it with the new device selection
 - If the target device is later removed from Home Assistant, the virtual battery entities will automatically fall back to a standalone device on the next restart
+- On Home Assistant 2026.8 and later, attached entities are named after the chosen device (for example "Hallway Smoke Detector Smoke Battery Level"); entity IDs you already use don't change. Batteries attached with earlier versions of this integration are moved back onto the chosen device automatically
 
 ## 💡 Example Use Cases
 
@@ -76,10 +77,12 @@ By configuring a virtual battery with an appropriate discharge period, you can a
 
 ## 🧰 Usage
 
-After configuration, you'll have a virtual battery device with two entities:
+After configuration, you'll have a virtual battery device with four entities (for a battery named "My Virtual Battery"):
 
-1. A sensor showing the battery level that will automatically discharge over the configured time period
-2. A button that can be pressed to reset the battery level to 100%
+1. `sensor.my_virtual_battery_battery_level`: the battery level, which discharges over the configured period
+2. `sensor.my_virtual_battery_time_since_reset`: days since the last reset
+3. `sensor.my_virtual_battery_time_until_empty`: days until the battery is empty
+4. `button.my_virtual_battery_reset`: resets the battery level to 100%
 
 The battery level updates once a minute. Very short discharge periods (under about 100 minutes) therefore drop in visible steps, e.g. a 10-minute battery loses 10% per update.
 
@@ -91,14 +94,14 @@ The integration provides the following services:
 
 - **Service**: `virtual_battery.reset_battery_level`
 - **Parameters**:
-  - `entity_id`: The entity ID of the virtual battery to reset
+  - `entity_id`: One or more virtual battery level sensors to reset
 - **Description**: Resets the battery level to 100%
 
 ### Set Battery Level
 
 - **Service**: `virtual_battery.set_battery_level`
 - **Parameters**:
-  - `entity_id`: The entity ID of the virtual battery to set
+  - `entity_id`: One or more virtual battery level sensors to set
   - `battery_level`: The new battery level (0-100)
 - **Description**: Sets the battery level to a specific value
 
@@ -106,7 +109,7 @@ The integration provides the following services:
 
 - **Service**: `virtual_battery.set_discharge_days`
 - **Parameters**:
-  - `entity_id`: The entity ID of the virtual battery to modify
+  - `entity_id`: One or more virtual battery level sensors to modify
   - `discharge_days`: The new number of discharge days. Decimals are allowed, e.g. `0.25` for 6 hours (minimum 1 minute, about `0.0007`)
 - **Description**: Changes the number of days to discharge the battery
 
@@ -126,19 +129,19 @@ Each virtual battery entity provides the following attributes:
 # Reset battery level
 service: virtual_battery.reset_battery_level
 target:
-  entity_id: sensor.my_virtual_battery
+  entity_id: sensor.my_virtual_battery_battery_level
 
 # Set battery level to 50%
 service: virtual_battery.set_battery_level
 target:
-  entity_id: sensor.my_virtual_battery
+  entity_id: sensor.my_virtual_battery_battery_level
 data:
   battery_level: 50
 
 # Set discharge days to 14
 service: virtual_battery.set_discharge_days
 target:
-  entity_id: sensor.my_virtual_battery
+  entity_id: sensor.my_virtual_battery_battery_level
 data:
   discharge_days: 14
 ```
@@ -148,7 +151,7 @@ data:
 ```yaml
 type: entities
 entities:
-  - entity: sensor.my_virtual_battery
+  - entity: sensor.my_virtual_battery_battery_level
     secondary_info: last-changed
 title: My Virtual Battery
 ```
@@ -160,7 +163,7 @@ title: My Virtual Battery
 ```yaml
 type: entities
 entities:
-  - entity: sensor.my_virtual_battery
+  - entity: sensor.my_virtual_battery_battery_level
     secondary_info: last-changed
   - entity: sensor.my_virtual_battery_time_since_reset
   - entity: sensor.my_virtual_battery_time_until_empty
@@ -173,7 +176,7 @@ title: My Virtual Battery
 type: vertical-stack
 cards:
   - type: gauge
-    entity: sensor.my_virtual_battery
+    entity: sensor.my_virtual_battery_battery_level
     min: 0
     max: 100
     severity:
@@ -216,13 +219,13 @@ automation:
   - alias: "Virtual Battery Low"
     trigger:
       platform: numeric_state
-      entity_id: sensor.my_virtual_battery
+      entity_id: sensor.my_virtual_battery_battery_level
       below: 20
     action:
       - service: notify.mobile_app
         data:
           title: "Virtual Battery Low"
-          message: "Battery level is {{ states('sensor.my_virtual_battery') }}%"
+          message: "Battery level is {{ states('sensor.my_virtual_battery_battery_level') }}%"
           data:
             icon: mdi:battery-low
 
@@ -252,7 +255,7 @@ automation:
     action:
       - service: virtual_battery.reset_battery_level
         target:
-          entity_id: sensor.my_virtual_battery
+          entity_id: sensor.my_virtual_battery_battery_level
 ```
 
 ### Adjust Discharge Days Based on Season
@@ -270,7 +273,7 @@ automation:
     action:
       - service: virtual_battery.set_discharge_days
         target:
-          entity_id: sensor.my_virtual_battery
+          entity_id: sensor.my_virtual_battery_battery_level
         data:
           discharge_days: 45 # Longer discharge in summer
 ```
