@@ -342,14 +342,18 @@ class VirtualBatterySensor(SensorEntity, RestoreEntity):
 
     async def async_reset_battery(self):
         """Reset battery level to 100%."""
+        previous_level = self._battery_level
         self._battery_level = 100
         self._last_reset = dt_util.utcnow()
         self._last_update = dt_util.utcnow()
+        # The level only rises here, so the periodic update never sees the crossing.
+        self._check_and_fire_threshold_events(previous_level)
         self.async_write_ha_state()
         self._notify_sensors()
 
     async def async_set_battery_level(self, battery_level):
         """Set battery level to specific value."""
+        previous_level = self._battery_level
         self._battery_level = min(100, max(0, battery_level))
         
         # Calculate and set a new last_reset time based on the manually set battery level
@@ -367,6 +371,7 @@ class VirtualBatterySensor(SensorEntity, RestoreEntity):
             self._last_reset = current_time
             
         self._last_update = current_time
+        self._check_and_fire_threshold_events(previous_level)
         self.async_write_ha_state()
         self._notify_sensors()
 
