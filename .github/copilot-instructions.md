@@ -26,7 +26,7 @@ All entities share the same `DeviceInfo` identifier: `(DOMAIN, entry_id)`
 Battery state persists across HA restarts using `RestoreEntity`:
 
 - State restoration happens in `async_added_to_hass()` via `_async_restore_state_from_last_stored()`
-- Critical attributes: `last_reset` (ISO datetime), `last_update` (ISO datetime), `discharge_days` (int)
+- Critical attributes: `last_reset` (ISO datetime), `last_update` (ISO datetime), `discharge_days` (float, fractional days allowed, minimum 1 minute)
 - Battery level is **calculated**, not stored - computed from `last_reset` timestamp and `discharge_days`
 - Handles edge cases: NaN values, infinite values, negative time deltas (clock changes)
 

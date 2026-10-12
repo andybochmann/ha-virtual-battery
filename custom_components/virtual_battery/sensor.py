@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.restore_state import RestoredExtraData, RestoreEntity
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -37,6 +37,13 @@ from .const import (
 from .device import attach_device, get_device
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _round_days(days: float, discharge_days: float) -> float:
+    """Round a duration in days to a resolution that fits the discharge period."""
+    # 0.01 d (~14 min) suits day-scale batteries and keeps recorder writes low;
+    # shorter batteries need ~9 s resolution to be useful.
+    return round(days, 2 if discharge_days >= 1 else 4)
 
 
 async def async_setup_entry(
@@ -112,12 +119,25 @@ class VirtualBatterySensor(SensorEntity, RestoreEntity):
             )
         )
 
+    @property
+    def extra_restore_state_data(self) -> RestoredExtraData:
+        """Store which config entry the saved state belongs to."""
+        return RestoredExtraData({"entry_id": self._entry_id})
+
     async def _async_restore_state_from_last_stored(self):
         """Restore state using RestoreEntity."""
         last_state = await self.async_get_last_state()
         
         if last_state is None:
             _LOGGER.debug("No previous state found for %s", self.entity_id)
+            return
+
+        # Saved states are keyed by entity_id, so a deleted battery's state would
+        # otherwise leak into a new battery created with the same name. States saved
+        # before entry_id was stored have no extra data and are restored as before.
+        last_extra = await self.async_get_last_extra_data()
+        if last_extra is not None and last_extra.as_dict().get("entry_id") != self._entry_id:
+            _LOGGER.debug("Ignoring saved state for %s from a deleted battery", self.entity_id)
             return
 
         try:
@@ -157,7 +177,7 @@ class VirtualBatterySensor(SensorEntity, RestoreEntity):
                     self._calculate_current_battery_level()
                 
                 _LOGGER.debug(
-                    "Restored state for %s: level=%.2f, discharge_days=%d, last_reset=%s",
+                    "Restored state for %s: level=%.2f, discharge_days=%s, last_reset=%s",
                     self.entity_id, 
                     self._battery_level, 
                     self._discharge_days, 
@@ -274,7 +294,7 @@ class VirtualBatterySensor(SensorEntity, RestoreEntity):
         # Log significant changes for debugging
         if abs(previous_level - self._battery_level) > 1.0:
             _LOGGER.debug(
-                "%s: Battery level changed from %.2f%% to %.2f%% (discharge days: %d, last reset: %s)",
+                "%s: Battery level changed from %.2f%% to %.2f%% (discharge days: %s, last reset: %s)",
                 self.entity_id,
                 previous_level,
                 self._battery_level,
@@ -390,7 +410,9 @@ class TimeSinceResetSensor(SensorEntity):
 
     @property
     def native_value(self):
-        return round(self._battery_sensor._calculate_time_since_reset(), 2)
+        return _round_days(
+            self._battery_sensor._calculate_time_since_reset(), self._battery_sensor._discharge_days
+        )
 
     @property
     def extra_state_attributes(self):
@@ -415,7 +437,9 @@ class TimeUntilEmptySensor(SensorEntity):
 
     @property
     def native_value(self):
-        return round(self._battery_sensor._calculate_time_until_empty(), 2)
+        return _round_days(
+            self._battery_sensor._calculate_time_until_empty(), self._battery_sensor._discharge_days
+        )
 
     @property
     def extra_state_attributes(self):

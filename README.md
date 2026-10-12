@@ -11,7 +11,7 @@ A custom Home Assistant integration that creates a virtual battery with configur
 ## ✨ Features
 
 - 🏷️ Create virtual batteries with custom names
-- ⏱️ Configure discharge periods (1 day or more)
+- ⏱️ Configure discharge periods (1 minute or more)
 - 🔄 Reset battery level to 100%
 - 🎚️ Set custom battery levels
 - 🔧 Modify discharge periods
@@ -44,7 +44,7 @@ Configure the integration through the UI:
 3. Search for **Virtual Battery**
 4. Follow the configuration steps:
    - **Battery Name**: A unique name for your virtual battery
-   - **Discharge Period**: Number of days for the battery to fully discharge
+   - **Discharge Period**: How long the battery takes to fully discharge (days, hours, minutes, seconds; minimum 1 minute)
    - **Attach to Device** (optional): Select an existing device to add the battery entities to
 
 ### Attaching to Existing Devices
@@ -70,6 +70,7 @@ Virtual Battery is useful for devices that do not natively report battery status
 - **Smoke Detectors:** Track battery replacement intervals for detectors that lack smart battery reporting.
 - **Remote Controls:** Set up reminders to replace or recharge batteries in remotes that aren't integrated with Home Assistant.
 - **Key Finders/Trackers:** Monitor battery change intervals for Bluetooth trackers or key finders.
+- **Short Timers:** Use a discharge period of a few minutes or hours and trigger announcements from the low/critical battery events.
 
 By configuring a virtual battery with an appropriate discharge period, you can automate reminders and maintenance tasks for any device that needs regular attention.
 
@@ -79,6 +80,8 @@ After configuration, you'll have a virtual battery device with two entities:
 
 1. A sensor showing the battery level that will automatically discharge over the configured time period
 2. A button that can be pressed to reset the battery level to 100%
+
+The battery level updates once a minute. Very short discharge periods (under about 100 minutes) therefore drop in visible steps, e.g. a 10-minute battery loses 10% per update.
 
 ## 🛠️ Services
 
@@ -104,14 +107,14 @@ The integration provides the following services:
 - **Service**: `virtual_battery.set_discharge_days`
 - **Parameters**:
   - `entity_id`: The entity ID of the virtual battery to modify
-  - `discharge_days`: The new number of discharge days (minimum 1)
+  - `discharge_days`: The new number of discharge days. Decimals are allowed, e.g. `0.25` for 6 hours (minimum 1 minute, about `0.0007`)
 - **Description**: Changes the number of days to discharge the battery
 
 ## 📊 Entity Attributes
 
 Each virtual battery entity provides the following attributes:
 
-- `discharge_days`: Number of days to discharge the battery
+- `discharge_days`: Number of days to discharge the battery (can be fractional, e.g. `0.25` for 6 hours)
 - `last_reset`: Timestamp of the last battery level reset
 - `last_update`: Timestamp of the last battery level update
 

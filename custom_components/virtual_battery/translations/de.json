@@ -6,7 +6,7 @@
         "description": "Richten Sie eine virtuelle Batterie mit konfigurierbarer Entladezeit ein. Optional kann sie einem vorhandenen Gerät zugewiesen werden.",
         "data": {
           "name": "Batteriename",
-          "discharge_days": "Entladezeit (Tage)",
+          "discharge_days": "Entladezeit",
           "target_device": "An Gerät anhängen (optional)"
         },
         "data_description": {
@@ -15,7 +15,7 @@
       }
     },
     "error": {
-      "discharge_days_invalid": "Entladezeit muss mindestens 1 Tag betragen",
+      "discharge_days_invalid": "Entladezeit muss mindestens 1 Minute betragen",
       "device_not_found": "Ausgewähltes Gerät nicht gefunden"
     },
     "abort": {
@@ -28,9 +28,12 @@
         "title": "Virtuelle Batterie Optionen",
         "description": "Ändern Sie die Entladezeit für diese virtuelle Batterie. Hinweis: Die Gerätezuordnung kann nach der Erstellung nicht mehr geändert werden. Um die Batterie einem anderen Gerät zuzuordnen, löschen und erstellen Sie die virtuelle Batterie neu.",
         "data": {
-          "discharge_days": "Entladezeit (Tage)"
+          "discharge_days": "Entladezeit"
         }
       }
+    },
+    "error": {
+      "discharge_days_invalid": "Entladezeit muss mindestens 1 Minute betragen"
     }
   }
 }
