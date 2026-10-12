@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `set_discharge_days` service accepts fractional days (e.g. `0.25` for 6 hours)
 - Fix: adding a battery with a name that already exists now shows "already configured" instead of an unknown error
 - Time Since Reset and Time Until Empty sensors show 4 decimals (about 9 seconds) for batteries shorter than a day; switch their display unit to minutes in the entity settings for easier reading
+- Services accept a list of entities, so the `target:` examples in scripts and automations work (#8)
+- A battery deleted and re-created with the same name no longer inherits the old battery's level, reset time and period (#9)
+- Fix: reset and set-level calls no longer log `hass.helpers` errors, and the time sensors update right away (#10)
+- Fix: `virtual_battery_full` now fires; setting the level below 20%/10% fires the low/critical events right away (#10)
+- Fix: "Attach to Device" works on Home Assistant 2026.8 and later; duplicate devices from earlier versions are removed (#10)
 
 ## [1.1.0] - 2026-01-02
 

@@ -18,6 +18,7 @@ from .const import (
     SERVICE_SET_BATTERY_LEVEL,
     SERVICE_SET_DISCHARGE_DAYS,
 )
+from .device import async_relink_target_device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,6 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         
     hass.data[DOMAIN][entry.entry_id] = entry.data
 
+    async_relink_target_device(hass, entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Register update listener for config entry changes
