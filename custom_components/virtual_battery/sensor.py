@@ -86,6 +86,7 @@ async def async_setup_entry(
     battery_sensor = VirtualBatterySensor(hass, entry.entry_id, name, discharge_days, device_info, target_device)
     time_since_reset_sensor = TimeSinceResetSensor(battery_sensor, name, device_info)
     time_until_empty_sensor = TimeUntilEmptySensor(battery_sensor, name, device_info)
+    battery_sensor._time_sensors = (time_since_reset_sensor, time_until_empty_sensor)
 
     async_add_entities([battery_sensor, time_since_reset_sensor, time_until_empty_sensor])
 
@@ -112,6 +113,7 @@ class VirtualBatterySensor(SensorEntity, RestoreEntity):
         self._discharge_days = discharge_days
         self._attr_unique_id = f"{DOMAIN}_{entry_id}"
         self._target_device_id = target_device_id
+        self._time_sensors = ()
         
         self._battery_level = 100
         self._last_reset = dt_util.utcnow()
@@ -333,32 +335,10 @@ class VirtualBatterySensor(SensorEntity, RestoreEntity):
         }
 
     def _notify_sensors(self):
-        """Notify associated time sensors to update their state."""
-        # Schedule state updates for the time sensors
-        # They will pick up the new values from their native_value properties
-        # which reference this battery sensor's calculation methods
-        if self.hass is not None:
-            self.hass.async_create_task(self._async_update_time_sensors())
-
-    async def _async_update_time_sensors(self):
-        """Update time sensors by triggering their state write."""
-        # The time sensors get their values from the battery sensor's methods,
-        # so we just need to trigger a state update on entities that belong to our device
-        entity_registry = self._hass.helpers.entity_registry.async_get(self._hass)
-        if entity_registry:
-            for entity_entry in entity_registry.entities.values():
-                if (entity_entry.unique_id and 
-                    entity_entry.unique_id.startswith(self._attr_unique_id) and
-                    entity_entry.unique_id != self._attr_unique_id):
-                    # This is a related sensor (time_since_reset or time_until_empty)
-                    entity = self._hass.states.get(entity_entry.entity_id)
-                    if entity:
-                        # Trigger state update by getting the entity and calling async_write_ha_state
-                        component = self._hass.data.get("sensor")
-                        if component:
-                            sensor_entity = component.get_entity(entity_entry.entity_id)
-                            if sensor_entity and hasattr(sensor_entity, 'async_write_ha_state'):
-                                sensor_entity.async_write_ha_state()
+        """Refresh the time sensors now instead of waiting for their next poll."""
+        for sensor in self._time_sensors:
+            if sensor.hass is not None:
+                sensor.async_write_ha_state()
 
     async def async_reset_battery(self):
         """Reset battery level to 100%."""
@@ -396,6 +376,7 @@ class VirtualBatterySensor(SensorEntity, RestoreEntity):
         self._calculate_discharge_rate()
         self._last_update = dt_util.utcnow()
         self.async_write_ha_state()
+        self._notify_sensors()
 
     def _calculate_time_since_reset(self):
         """Calculate the time since the last battery reset in days as a float."""
