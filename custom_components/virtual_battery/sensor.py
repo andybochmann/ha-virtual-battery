@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, PERCENTAGE
+from homeassistant.const import CONF_NAME, PERCENTAGE, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
@@ -37,6 +37,15 @@ from .const import (
 from .device import attach_device, get_device
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _suggested_time_unit(discharge_days: float) -> str:
+    """Pick a readable unit for the time sensors: "0 d" says nothing about a 1-hour battery."""
+    if discharge_days < 2 / 24:
+        return UnitOfTime.MINUTES
+    if discharge_days < 1:
+        return UnitOfTime.HOURS
+    return UnitOfTime.DAYS
 
 
 def _round_days(days: float, discharge_days: float) -> float:
@@ -406,6 +415,8 @@ class TimeSinceResetSensor(SensorEntity):
         self._battery_sensor = battery_sensor
         self._attr_name = f"{name} Time Since Reset"
         self._attr_unique_id = f"{battery_sensor.unique_id}_time_since_reset"
+        # Home Assistant stores this once, when the entity is first registered.
+        self._attr_suggested_unit_of_measurement = _suggested_time_unit(battery_sensor._discharge_days)
         attach_device(self, device)
 
     @property
@@ -433,6 +444,8 @@ class TimeUntilEmptySensor(SensorEntity):
         self._battery_sensor = battery_sensor
         self._attr_name = f"{name} Time Until Empty"
         self._attr_unique_id = f"{battery_sensor.unique_id}_time_until_empty"
+        # Home Assistant stores this once, when the entity is first registered.
+        self._attr_suggested_unit_of_measurement = _suggested_time_unit(battery_sensor._discharge_days)
         attach_device(self, device)
 
     @property

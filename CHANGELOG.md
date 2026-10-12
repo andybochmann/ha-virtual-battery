@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix: `virtual_battery_full` now fires; setting the level below 20%/10% fires the low/critical events right away (#10)
 - Fix: "Attach to Device" works on Home Assistant 2026.8 and later; duplicate devices from earlier versions are removed (#10)
 - The reset button has a battery icon (#11)
+- New batteries shorter than a day show their time sensors in minutes (under 2 hours) or hours instead of "0d"
 
 ## [1.1.0] - 2026-01-02
 
