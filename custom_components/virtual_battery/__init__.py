@@ -28,42 +28,34 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 def _register_services(hass: HomeAssistant) -> None:
     """Register services for the Virtual Battery integration."""
-    
+
+    def _target_entities(call: ServiceCall) -> list:
+        """Return the virtual battery sensors named in the call's entity_id list."""
+        entity_ids = call.data["entity_id"]
+        return [
+            entity for entity in hass.data[DOMAIN].get("entities", [])
+            if entity.entity_id in entity_ids
+        ]
+
     async def reset_battery_level(call: ServiceCall) -> None:
         """Reset battery level to 100%."""
-        entity_id = call.data["entity_id"]
-        if "entities" in hass.data[DOMAIN]:
-            for entity in hass.data[DOMAIN]["entities"]:
-                if entity.entity_id == entity_id:
-                    await entity.async_reset_battery()
-                    break
+        for entity in _target_entities(call):
+            await entity.async_reset_battery()
 
     async def set_battery_level(call: ServiceCall) -> None:
         """Set battery level to specified value."""
-        entity_id = call.data["entity_id"]
-        battery_level = call.data.get(ATTR_BATTERY_LEVEL)
-        
-        if "entities" in hass.data[DOMAIN]:
-            for entity in hass.data[DOMAIN]["entities"]:
-                if entity.entity_id == entity_id:
-                    await entity.async_set_battery_level(battery_level)
-                    break
+        for entity in _target_entities(call):
+            await entity.async_set_battery_level(call.data[ATTR_BATTERY_LEVEL])
 
     async def set_discharge_days(call: ServiceCall) -> None:
         """Set discharge days to specified value."""
-        entity_id = call.data["entity_id"]
-        discharge_days = call.data.get(ATTR_DISCHARGE_DAYS)
-        
-        if "entities" in hass.data[DOMAIN]:
-            for entity in hass.data[DOMAIN]["entities"]:
-                if entity.entity_id == entity_id:
-                    await entity.async_set_discharge_days(discharge_days)
-                    break
+        for entity in _target_entities(call):
+            await entity.async_set_discharge_days(call.data[ATTR_DISCHARGE_DAYS])
 
     hass.services.async_register(
         DOMAIN, SERVICE_RESET_BATTERY_LEVEL, reset_battery_level,
         schema=vol.Schema({
-            vol.Required("entity_id"): cv.entity_id,
+            vol.Required("entity_id"): cv.entity_ids,
         })
     )
     
@@ -72,7 +64,7 @@ def _register_services(hass: HomeAssistant) -> None:
         SERVICE_SET_BATTERY_LEVEL, 
         set_battery_level, 
         schema=vol.Schema({
-            vol.Required("entity_id"): cv.entity_id,
+            vol.Required("entity_id"): cv.entity_ids,
             vol.Required(ATTR_BATTERY_LEVEL): vol.All(
                 vol.Coerce(int), vol.Range(min=0, max=100)
             ),
@@ -84,7 +76,7 @@ def _register_services(hass: HomeAssistant) -> None:
         SERVICE_SET_DISCHARGE_DAYS, 
         set_discharge_days,
         schema=vol.Schema({
-            vol.Required("entity_id"): cv.entity_id,
+            vol.Required("entity_id"): cv.entity_ids,
             vol.Required(ATTR_DISCHARGE_DAYS): vol.All(
                 vol.Coerce(int), vol.Range(min=MIN_DISCHARGE_DAYS)
             ),
